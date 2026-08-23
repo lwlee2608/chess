@@ -400,7 +400,7 @@ h1 {
 .time-controls .time-control--selected { border-color: var(--rust); background: var(--rust); }
 .mode-options strong { margin: 10px 0 6px; font-family: 'Playfair Display', serif; font-size: 1.25rem; }
 .mode-options > button > span { color: #aaa99f; font-size: 0.64rem; }
-.local-kings { display: flex !important; justify-content: center; }
+.local-kings { display: flex !important; justify-content: center; align-items: center; height: 96px; }
 .local-kings svg { width: 60px; margin: 0 -8px; }
 footer { border-top: 1px solid rgba(232, 223, 203, 0.28); border-bottom: 0; padding: 16px 0 0; }
 
@@ -476,7 +476,7 @@ footer { border-top: 1px solid rgba(232, 223, 203, 0.28); border-bottom: 0; padd
   .mode-options > button { display: grid; grid-template-columns: 70px 1fr; align-items: center; text-align: left; }
   .mode-options strong { margin: 0; }
   .mode-options > button > span:last-child { grid-column: 2; }
-  .local-kings { grid-row: span 2; }
+  .local-kings { grid-row: span 2; height: auto; }
   .new-game-dialog h2 { margin-bottom: 22px; }
   .game-note { display: block; }
   .game-note .game-note__hint { margin-top: 16px; text-align: left; }
