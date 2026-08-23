@@ -1,11 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createStartingPosition } from '../engine/board'
 import { applyMove, getGameStatus, getLegalMoves } from '../engine/game'
-import type { Color, Move, PromotionPiece } from '../engine/types'
+import { toSan } from '../engine/san'
+import type { Color, Move, Position, PromotionPiece } from '../engine/types'
 import type { GameMode } from '../ui/NewGameDialog'
+
+interface GameSnapshot {
+  position: Position
+  move: Move
+  san: string
+}
 
 export function useGame() {
   const [position, setPosition] = useState(createStartingPosition)
+  const [history, setHistory] = useState<GameSnapshot[]>([])
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
   const [pendingPromotion, setPendingPromotion] = useState<Move[] | null>(null)
   const [mode, setMode] = useState<GameMode | null>(null)
@@ -13,33 +21,34 @@ export function useGame() {
   const searchGeneration = useRef(0)
 
   const humanColor: Color | null = mode === 'ai-white' ? 'white' : mode === 'ai-black' ? 'black' : null
-  const legalMoves = useMemo(() => {
-    if (selectedSquare === null) return []
-    return getLegalMoves(position, selectedSquare)
-  }, [position, selectedSquare])
+  const legalMoves = useMemo(() => selectedSquare === null ? [] : getLegalMoves(position, selectedSquare), [position, selectedSquare])
   const status = useMemo(() => getGameStatus(position), [position])
   const computerTurn = mode !== null && humanColor !== null && position.turn !== humanColor && status.type === 'playing'
   const inputBlocked = computerTurn || status.type !== 'playing'
 
-  useEffect(() => {
-    return () => workerRef.current?.terminate()
-  }, [])
+  const commitMove = useCallback((move: Move) => {
+    const next = applyMove(position, move)
+    if (next === position) return
+    setHistory((entries) => [...entries, { position, move, san: toSan(position, move) }])
+    setPosition(next)
+    setSelectedSquare(null)
+  }, [position])
+
+  useEffect(() => () => workerRef.current?.terminate(), [])
 
   useEffect(() => {
     if (!computerTurn) return
     const generation = ++searchGeneration.current
-
     const worker = new Worker(new URL('../ai/worker.ts', import.meta.url), { type: 'module' })
     workerRef.current?.terminate()
     workerRef.current = worker
     worker.onmessage = (event: MessageEvent<Move | null>) => {
       if (generation !== searchGeneration.current || !event.data) return
-      setPosition((current) => applyMove(current, event.data!))
+      commitMove(event.data)
     }
     worker.postMessage(position)
-
     return () => worker.terminate()
-  }, [computerTurn, position])
+  }, [commitMove, computerTurn, position])
 
   const selectSquare = (square: number) => {
     if (inputBlocked) return
@@ -55,9 +64,7 @@ export function useGame() {
       setPendingPromotion(candidates)
       return true
     }
-
-    setPosition((current) => applyMove(current, candidates[0]))
-    setSelectedSquare(null)
+    commitMove(candidates[0])
     return true
   }
 
@@ -68,7 +75,6 @@ export function useGame() {
       return
     }
     if (moveTo(square)) return
-
     const piece = position.board[square]
     setSelectedSquare(piece?.color === position.turn ? square : null)
   }
@@ -76,18 +82,40 @@ export function useGame() {
   const promote = (promotion: PromotionPiece) => {
     const move = pendingPromotion?.find((candidate) => candidate.promotion === promotion)
     if (!move) return
-    setPosition((current) => applyMove(current, move))
+    commitMove(move)
     setPendingPromotion(null)
-    setSelectedSquare(null)
   }
 
   const startNewGame = (nextMode?: GameMode) => {
     searchGeneration.current += 1
     workerRef.current?.terminate()
     setPosition(createStartingPosition())
+    setHistory([])
     setSelectedSquare(null)
     setPendingPromotion(null)
     setMode(nextMode ?? null)
+  }
+
+  let aiRestoreIndex = -1
+  if (humanColor !== null) {
+    for (let index = history.length - 1; index >= 0; index -= 1) {
+      if (history[index].position.turn === humanColor) {
+        aiRestoreIndex = index
+        break
+      }
+    }
+  }
+
+  const undo = () => {
+    if (history.length === 0 || computerTurn) return
+    const restoreIndex = mode === 'local' ? history.length - 1 : aiRestoreIndex
+    if (restoreIndex < 0) return
+    searchGeneration.current += 1
+    workerRef.current?.terminate()
+    setPosition(history[restoreIndex].position)
+    setHistory((entries) => entries.slice(0, restoreIndex))
+    setSelectedSquare(null)
+    setPendingPromotion(null)
   }
 
   return {
@@ -100,10 +128,14 @@ export function useGame() {
     thinking: computerTurn,
     inputBlocked,
     orientation: mode === 'ai-black' ? 'black' as const : 'white' as const,
+    moves: history.map(({ san }) => san),
+    lastMove: history.at(-1)?.move ?? null,
+    canUndo: !computerTurn && (mode === 'local' ? history.length > 0 : aiRestoreIndex >= 0),
     chooseSquare,
     selectSquare,
     moveTo,
     promote,
     startNewGame,
+    undo,
   }
 }
