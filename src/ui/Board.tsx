@@ -21,7 +21,13 @@ export function Board({
   onMoveTo,
 }: BoardProps) {
   const [draggingSquare, setDraggingSquare] = useState<number | null>(null)
-  const pointerStart = useRef<{ id: number; square: number; x: number; y: number } | null>(null)
+  const pointerStart = useRef<{
+    id: number
+    square: number
+    x: number
+    y: number
+    wasSelected: boolean
+  } | null>(null)
   const suppressNextClick = useRef(false)
   const legalTargets = new Set(legalMoves.map(({ to }) => to))
 
@@ -32,7 +38,10 @@ export function Board({
     if (!start || start.id !== event.pointerId) return
 
     const distance = Math.hypot(event.clientX - start.x, event.clientY - start.y)
-    if (distance < 8) return
+    if (distance < 8) {
+      if (start.wasSelected) onChooseSquare(start.square)
+      return
+    }
 
     const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-square]')
     const targetSquare = Number(target?.dataset.square)
@@ -74,10 +83,10 @@ export function Board({
                   square,
                   x: event.clientX,
                   y: event.clientY,
+                  wasSelected: selectedSquare === square,
                 }
                 event.currentTarget.setPointerCapture(event.pointerId)
-                if (selectedSquare === square) onChooseSquare(square)
-                else onSelectSquare(square)
+                if (selectedSquare !== square) onSelectSquare(square)
               }}
               onPointerMove={(event) => {
                 const start = pointerStart.current
