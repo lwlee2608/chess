@@ -17,7 +17,7 @@ A browser chess game with rules written from scratch: legal moves, checkmate and
 - **Extras in scope?** — Algebraic move history, undo/takeback, save across refresh, chess clock. All four confirmed.
 
 ## Progress
-Phase 2 of 6 · 16/35 tasks
+Phase 3 of 6 · 22/35 tasks
 
 ### Phase 1 — Move pieces around a real board
 Two people can push pieces on screen and every piece moves the way it should, though nothing stops an illegal king capture yet.
@@ -45,12 +45,12 @@ The board now enforces real chess: you cannot leave your king in check, and the 
 
 ### Phase 3 — Play against the computer
 Pick a color from a New Game screen and the machine answers your moves.
-- [ ] Write the position evaluation: material plus piece-square tables (src/ai/evaluate.ts)
-- [ ] Implement minimax with alpha-beta pruning to depth 3 (src/ai/search.ts)
-- [ ] Run the search inside a Web Worker and post the chosen move back (src/ai/worker.ts)
-- [ ] Build the New Game screen: play White, play Black, or two-player-local (src/ui/NewGameDialog.tsx)
-- [ ] Flip the board when playing Black and let the AI open as White (src/ui/Board.tsx, src/state/useGame.ts)
-- [ ] Show a thinking indicator and block input while the AI searches (src/ui/App.tsx)
+- [x] Write the position evaluation: material plus piece-square tables (src/ai/evaluate.ts)
+- [x] Implement minimax with alpha-beta pruning to depth 3 (src/ai/search.ts)
+- [x] Run the search inside a Web Worker and post the chosen move back (src/ai/worker.ts)
+- [x] Build the New Game screen: play White, play Black, or two-player-local (src/ui/NewGameDialog.tsx)
+- [x] Flip the board when playing Black and let the AI open as White (src/ui/Board.tsx, src/state/useGame.ts)
+- [x] Show a thinking indicator and block input while the AI searches (src/ui/App.tsx)
 **Demo:** New Game → Play as Black. The computer opens for White, the board is flipped, and hanging your queen on the next move gets it taken.
 
 ### Phase 4 — Follow the game and take a move back
