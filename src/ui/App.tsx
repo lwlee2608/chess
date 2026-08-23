@@ -2,7 +2,7 @@ import { isKingInCheck } from '../engine/moves'
 import { useGame } from '../state/useGame'
 import { Clock } from './Clock'
 import { Board } from './Board'
-import { NewGameDialog } from './NewGameDialog'
+import { DIFFICULTY_LABELS, NewGameDialog } from './NewGameDialog'
 import { MoveList } from './MoveList'
 import { PromotionDialog } from './PromotionDialog'
 
@@ -10,9 +10,10 @@ export function App() {
   const game = useGame()
   const turn = game.position.turn === 'white' ? 'White' : 'Black'
   const checkedColor = isKingInCheck(game.position, game.position.turn) ? game.position.turn : null
+  const level = DIFFICULTY_LABELS[game.difficulty]
 
-  let heading = game.thinking ? 'Computer is thinking' : `${turn} to move`
-  let kicker = game.thinking ? 'Depth 3 search' : checkedColor ? 'Check' : game.mode === 'local' ? 'Local play' : 'Vs computer'
+  let heading = game.searchFailed ? 'Computer could not move' : game.thinking ? 'Computer is thinking' : `${turn} to move`
+  let kicker = game.searchFailed ? 'Undo or start a new game' : game.thinking ? `${level} search` : checkedColor ? 'Check' : game.mode === 'local' ? 'Local play' : 'Vs computer'
   if (game.status.type === 'checkmate') {
     heading = `Checkmate — ${game.status.winner === 'white' ? 'White' : 'Black'} wins`
     kicker = 'Game over'
@@ -75,7 +76,7 @@ export function App() {
         </section>
 
         <footer>
-          <span>{game.mode === 'local' ? 'Two players · Full rules' : 'Human vs machine · Depth 3'}</span>
+          <span>{game.mode === 'local' ? 'Two players · Full rules' : `Human vs machine · ${level}`}</span>
           <button type="button" className="footer-button" onClick={() => game.startNewGame()}>New game</button>
         </footer>
       </main>

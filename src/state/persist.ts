@@ -1,3 +1,5 @@
+import type { Difficulty } from '../ai/search'
+import { DIFFICULTIES } from '../ai/search'
 import type { Move, Piece, Position } from '../engine/types'
 import type { ClockState, TimeControl } from './useClock'
 import type { GameMode } from '../ui/NewGameDialog'
@@ -20,6 +22,7 @@ export interface PersistedGame {
   history: PersistedSnapshot[]
   mode: GameMode
   timeControl: TimeControl
+  difficulty?: Difficulty
   clock: ClockState
 }
 
@@ -66,6 +69,7 @@ function isPersistedGame(value: unknown): value is PersistedGame {
   const game = value as Record<string, unknown>
   if (!isPosition(game.position) || !isClock(game.clock)) return false
   if (!MODES.includes(game.mode as GameMode) || !CONTROLS.includes(game.timeControl as TimeControl)) return false
+  if (game.difficulty !== undefined && !DIFFICULTIES.includes(game.difficulty as Difficulty)) return false
   if (!Array.isArray(game.history)) return false
   return game.history.every((value) => {
     if (typeof value !== 'object' || value === null) return false

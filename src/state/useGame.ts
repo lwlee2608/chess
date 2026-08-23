@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Difficulty, SearchRequest } from '../ai/search'
 import { createStartingPosition } from '../engine/board'
 import { applyMove, getGameStatus, getLegalMoves, hasMatingMaterial } from '../engine/game'
 import { toSan } from '../engine/san'
@@ -25,8 +26,10 @@ export function useGame() {
   const [pendingPromotion, setPendingPromotion] = useState<Move[] | null>(null)
   const [mode, setMode] = useState<GameMode | null>(null)
   const [timeControl, setTimeControl] = useState<TimeControl>(() => initial?.timeControl ?? 'off')
+  const [difficulty, setDifficulty] = useState<Difficulty>(() => initial?.difficulty ?? 'club')
   const [resumeAvailable, setResumeAvailable] = useState(initial !== null)
   const [resumed, setResumed] = useState(false)
+  const [searchFailed, setSearchFailed] = useState(false)
   const workerRef = useRef<Worker | null>(null)
   const savedAtLoad = useRef(initial)
   const searchGeneration = useRef(0)
@@ -50,8 +53,9 @@ export function useGame() {
 
   const humanColor: Color | null = mode === 'ai-white' ? 'white' : mode === 'ai-black' ? 'black' : null
   const legalMoves = useMemo(() => selectedSquare === null ? [] : getLegalMoves(position, selectedSquare), [position, selectedSquare])
-  const computerTurn = resumed && mode !== null && humanColor !== null && position.turn !== humanColor && status.type === 'playing'
-  const inputBlocked = !resumed || computerTurn || status.type !== 'playing'
+  const aiToMove = resumed && mode !== null && humanColor !== null && position.turn !== humanColor && status.type === 'playing'
+  const computerTurn = aiToMove && !searchFailed
+  const inputBlocked = !resumed || aiToMove || status.type !== 'playing'
 
   const commitMove = useCallback((move: Move) => {
     const next = applyMove(position, move)
@@ -75,9 +79,12 @@ export function useGame() {
       if (generation !== searchGeneration.current || !event.data) return
       commitMove(event.data)
     }
-    worker.postMessage(position)
+    worker.onerror = () => {
+      if (generation === searchGeneration.current) setSearchFailed(true)
+    }
+    worker.postMessage({ position, difficulty } satisfies SearchRequest)
     return () => worker.terminate()
-  }, [commitMove, computerTurn, position])
+  }, [commitMove, computerTurn, difficulty, position])
 
   useEffect(() => {
     if (!resumed || mode === null) return
@@ -85,18 +92,18 @@ export function useGame() {
       clearSavedGame()
       return
     }
-    saveGame({ position, history, mode, timeControl, clock: snapshotClock() })
-  }, [history, mode, position, resumed, snapshotClock, status.type, timeControl])
+    saveGame({ position, history, mode, timeControl, difficulty, clock: snapshotClock() })
+  }, [difficulty, history, mode, position, resumed, snapshotClock, status.type, timeControl])
 
   useEffect(() => {
     if (!resumed || mode === null || status.type !== 'playing') return
     const handlePageHide = () => {
       const settledClock = flushClock(position.turn)
-      saveGame({ position, history, mode, timeControl, clock: settledClock })
+      saveGame({ position, history, mode, timeControl, difficulty, clock: settledClock })
     }
     window.addEventListener('pagehide', handlePageHide)
     return () => window.removeEventListener('pagehide', handlePageHide)
-  }, [flushClock, history, mode, position, resumed, status.type, timeControl])
+  }, [difficulty, flushClock, history, mode, position, resumed, status.type, timeControl])
 
   const selectSquare = (square: number) => {
     if (inputBlocked) return
@@ -134,7 +141,7 @@ export function useGame() {
     setPendingPromotion(null)
   }
 
-  const startNewGame = (nextMode?: GameMode, nextTimeControl: TimeControl = 'off') => {
+  const startNewGame = (nextMode?: GameMode, nextTimeControl: TimeControl = 'off', nextDifficulty: Difficulty = 'club') => {
     searchGeneration.current += 1
     workerRef.current?.terminate()
     clearSavedGame()
@@ -143,7 +150,9 @@ export function useGame() {
     setHistory([])
     setSelectedSquare(null)
     setPendingPromotion(null)
+    setSearchFailed(false)
     setTimeControl(nextTimeControl)
+    setDifficulty(nextDifficulty)
     resetClock(nextTimeControl)
     setResumeAvailable(false)
     setResumed(nextMode !== undefined)
@@ -156,6 +165,8 @@ export function useGame() {
     setPosition(saved.position)
     setHistory(saved.history)
     setTimeControl(saved.timeControl)
+    setDifficulty(saved.difficulty ?? 'club')
+    setSearchFailed(false)
     restoreClock(saved.clock)
     setMode(saved.mode)
     setResumeAvailable(false)
@@ -178,6 +189,7 @@ export function useGame() {
     if (restoreIndex < 0) return
     searchGeneration.current += 1
     workerRef.current?.terminate()
+    setSearchFailed(false)
     setPosition(history[restoreIndex].position)
     restoreClock(history[restoreIndex].clock)
     setHistory((entries) => entries.slice(0, restoreIndex))
@@ -193,6 +205,7 @@ export function useGame() {
     pendingPromotion,
     mode,
     thinking: computerTurn,
+    searchFailed,
     inputBlocked,
     orientation: mode === 'ai-black' ? 'black' as const : 'white' as const,
     moves: history.map(({ san }) => san),
@@ -200,6 +213,7 @@ export function useGame() {
     canUndo: !computerTurn && (mode === 'local' ? history.length > 0 : aiRestoreIndex >= 0),
     clock,
     timeControl,
+    difficulty,
     resumeAvailable,
     resumed,
     chooseSquare,

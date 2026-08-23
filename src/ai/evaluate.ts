@@ -1,6 +1,6 @@
 import type { Color, PieceType, Position } from '../engine/types'
 
-const MATERIAL: Record<PieceType, number> = {
+export const MATERIAL: Record<PieceType, number> = {
   pawn: 100,
   knight: 320,
   bishop: 330,
