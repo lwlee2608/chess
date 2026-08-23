@@ -10,6 +10,7 @@ export function useGame() {
   const [pendingPromotion, setPendingPromotion] = useState<Move[] | null>(null)
   const [mode, setMode] = useState<GameMode | null>(null)
   const workerRef = useRef<Worker | null>(null)
+  const searchGeneration = useRef(0)
 
   const humanColor: Color | null = mode === 'ai-white' ? 'white' : mode === 'ai-black' ? 'black' : null
   const legalMoves = useMemo(() => {
@@ -26,12 +27,14 @@ export function useGame() {
 
   useEffect(() => {
     if (!computerTurn) return
+    const generation = ++searchGeneration.current
 
     const worker = new Worker(new URL('../ai/worker.ts', import.meta.url), { type: 'module' })
     workerRef.current?.terminate()
     workerRef.current = worker
     worker.onmessage = (event: MessageEvent<Move | null>) => {
-      if (event.data) setPosition((current) => applyMove(current, event.data!))
+      if (generation !== searchGeneration.current || !event.data) return
+      setPosition((current) => applyMove(current, event.data!))
     }
     worker.postMessage(position)
 
@@ -79,6 +82,7 @@ export function useGame() {
   }
 
   const startNewGame = (nextMode?: GameMode) => {
+    searchGeneration.current += 1
     workerRef.current?.terminate()
     setPosition(createStartingPosition())
     setSelectedSquare(null)
