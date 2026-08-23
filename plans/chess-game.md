@@ -17,18 +17,18 @@ A browser chess game with rules written from scratch: legal moves, checkmate and
 - **Extras in scope?** — Algebraic move history, undo/takeback, save across refresh, chess clock. All four confirmed.
 
 ## Progress
-Phase 1 of 6 · 0/35 tasks
+Phase 1 of 6 · 8/35 tasks
 
 ### Phase 1 — Move pieces around a real board
 Two people can push pieces on screen and every piece moves the way it should, though nothing stops an illegal king capture yet.
-- [ ] Scaffold the Vite + React + TS app (package.json, vite.config.ts, index.html, src/main.tsx)
-- [ ] Define square, piece, and position types plus the starting board (src/engine/types.ts, src/engine/board.ts)
-- [ ] Generate pseudo-legal moves for all six piece types (src/engine/moves.ts)
-- [ ] Build the inline SVG piece set as React components (src/ui/pieces.tsx)
-- [ ] Render the 8x8 board with rank/file coordinates and pieces (src/ui/Board.tsx)
-- [ ] Click to select a piece and highlight its legal targets (src/ui/Board.tsx, src/state/useGame.ts)
-- [ ] Add drag-and-drop that reuses the same selection state, with a touch fallback (src/ui/Board.tsx)
-- [ ] Apply the move, alternate the turn, and show whose move it is (src/engine/game.ts, src/ui/App.tsx)
+- [x] Scaffold the Vite + React + TS app (package.json, vite.config.ts, index.html, src/main.tsx)
+- [x] Define square, piece, and position types plus the starting board (src/engine/types.ts, src/engine/board.ts)
+- [x] Generate pseudo-legal moves for all six piece types (src/engine/moves.ts)
+- [x] Build the inline SVG piece set as React components (src/ui/pieces.tsx)
+- [x] Render the 8x8 board with rank/file coordinates and pieces (src/ui/Board.tsx)
+- [x] Click to select a piece and highlight its legal targets (src/ui/Board.tsx, src/state/useGame.ts)
+- [x] Add drag-and-drop that reuses the same selection state, with a touch fallback (src/ui/Board.tsx)
+- [x] Apply the move, alternate the turn, and show whose move it is (src/engine/game.ts, src/ui/App.tsx)
 **Demo:** `npm run dev`, open http://localhost:5173 — play 1. e4 e5 2. Nf3 Nc6 by clicking, then move a knight back by dragging it.
 
 ### Phase 2 — Play a game that actually ends
