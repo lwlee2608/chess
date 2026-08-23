@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createStartingPosition } from '../engine/board'
-import { applyMove, getGameStatus, getLegalMoves, hasInsufficientMaterial } from '../engine/game'
+import { applyMove, getGameStatus, getLegalMoves, hasMatingMaterial } from '../engine/game'
 import { toSan } from '../engine/san'
 import type { Color, GameStatus, Move, Position, PromotionPiece } from '../engine/types'
 import { opposite } from '../engine/types'
 import type { GameMode } from '../ui/NewGameDialog'
 import { useClock } from './useClock'
-import type { TimeControl } from './useClock'
+import type { ClockState, TimeControl } from './useClock'
 
 interface GameSnapshot {
   position: Position
   move: Move
+  clock: ClockState
   san: string
 }
 
@@ -25,7 +26,7 @@ export function useGame() {
   const searchGeneration = useRef(0)
   const engineStatus = useMemo(() => getGameStatus(position), [position])
   const clockRunning = mode !== null && engineStatus.type === 'playing'
-  const { clock, completeMove, reset: resetClock } = useClock(timeControl, position.turn, clockRunning)
+  const { clock, completeMove, reset: resetClock, restore: restoreClock } = useClock(timeControl, position.turn, clockRunning)
 
   const flaggedColor: Color | null = timeControl === 'off'
     ? null
@@ -33,7 +34,7 @@ export function useGame() {
   let status: GameStatus = engineStatus
   if (flaggedColor !== null && engineStatus.type === 'playing') {
     const winner = opposite(flaggedColor)
-    status = { type: 'timeout', winner: hasInsufficientMaterial(position.board) ? null : winner }
+    status = { type: 'timeout', winner: hasMatingMaterial(position.board, winner) ? winner : null }
   }
 
   const humanColor: Color | null = mode === 'ai-white' ? 'white' : mode === 'ai-black' ? 'black' : null
@@ -44,11 +45,12 @@ export function useGame() {
   const commitMove = useCallback((move: Move) => {
     const next = applyMove(position, move)
     if (next === position) return
-    completeMove(position.turn)
-    setHistory((entries) => [...entries, { position, move, san: toSan(position, move) }])
+    const clockBeforeMove = { ...clock }
+    if (!completeMove(position.turn)) return
+    setHistory((entries) => [...entries, { position, move, san: toSan(position, move), clock: clockBeforeMove }])
     setPosition(next)
     setSelectedSquare(null)
-  }, [completeMove, position])
+  }, [clock, completeMove, position])
 
   useEffect(() => () => workerRef.current?.terminate(), [])
 
@@ -131,6 +133,7 @@ export function useGame() {
     searchGeneration.current += 1
     workerRef.current?.terminate()
     setPosition(history[restoreIndex].position)
+    restoreClock(history[restoreIndex].clock)
     setHistory((entries) => entries.slice(0, restoreIndex))
     setSelectedSquare(null)
     setPendingPromotion(null)

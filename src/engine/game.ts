@@ -1,5 +1,5 @@
 import { getPseudoLegalMoves, isKingInCheck, isSquareAttacked } from './moves'
-import type { Board, CastlingRights, GameStatus, Move, Piece, Position } from './types'
+import type { Board, CastlingRights, Color, GameStatus, Move, Piece, Position } from './types'
 import { opposite } from './types'
 
 const ROOK_RIGHT_BY_SQUARE = {
@@ -170,6 +170,13 @@ export function hasInsufficientMaterial(board: Board): boolean {
 
   const squareColors = pieces.map(({ square }) => (Math.floor(square / 8) + square % 8) % 2)
   return squareColors.every((color) => color === squareColors[0])
+}
+export function hasMatingMaterial(board: Board, color: Color): boolean {
+  const pieces = board.filter((piece) => piece?.color === color && piece.type !== 'king') as Piece[]
+  if (pieces.some((piece) => piece.type === 'pawn' || piece.type === 'rook' || piece.type === 'queen')) return true
+  const bishops = pieces.filter((piece) => piece.type === 'bishop').length
+  const knights = pieces.filter((piece) => piece.type === 'knight').length
+  return bishops >= 2 || (bishops >= 1 && knights >= 1) || knights >= 3
 }
 
 export function getGameStatus(position: Position): GameStatus {

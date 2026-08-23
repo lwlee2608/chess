@@ -56,15 +56,15 @@ export function App() {
             onSelectSquare={game.selectSquare}
             onMoveTo={game.moveTo}
           />
-          {game.timeControl !== 'off' && (
-            <div className="clocks">
-              <Clock color="black" milliseconds={game.clock.blackMs} active={game.position.turn === 'black' && game.status.type === 'playing'} />
-              <Clock color="white" milliseconds={game.clock.whiteMs} active={game.position.turn === 'white' && game.status.type === 'playing'} />
-            </div>
-          )}
           <aside className="game-sidebar" aria-live="polite">
+            {game.timeControl !== 'off' && (
+              <div className="clocks">
+                <Clock color="black" milliseconds={game.clock.blackMs} active={game.position.turn === 'black' && game.status.type === 'playing'} />
+                <Clock color="white" milliseconds={game.clock.whiteMs} active={game.position.turn === 'white' && game.status.type === 'playing'} />
+              </div>
+            )}
             <div className="game-note">
-              <span className="game-note__number">04</span>
+              <span className="game-note__number">05</span>
               <p>{kicker}</p>
               <h2>{heading}</h2>
               <div className="game-note__rule" />
