@@ -9,6 +9,7 @@ interface BoardProps {
   legalMoves: Move[]
   checkedColor: Position['turn'] | null
   disabled: boolean
+  orientation: Position['turn']
   onChooseSquare: (square: number) => void
   onSelectSquare: (square: number) => void
   onMoveTo: (square: number) => boolean
@@ -20,6 +21,7 @@ export function Board({
   legalMoves,
   checkedColor,
   disabled,
+  orientation,
   onChooseSquare,
   onSelectSquare,
   onMoveTo,
@@ -55,9 +57,12 @@ export function Board({
   return (
     <div className="board-frame">
       <div className="board" role="grid" aria-label="Chess board">
-        {position.board.map((piece, square) => {
+        {(orientation === 'white' ? position.board.map((_, square) => square) : position.board.map((_, square) => 63 - square)).map((square, displayIndex) => {
+          const piece = position.board[square]
           const rank = Math.floor(square / 8)
           const file = square % 8
+          const displayRank = Math.floor(displayIndex / 8)
+          const displayFile = displayIndex % 8
           const isLight = (rank + file) % 2 === 0
           const isSelected = selectedSquare === square
           const isTarget = legalTargets.has(square)
@@ -107,8 +112,8 @@ export function Board({
                 setDraggingSquare(null)
               }}
             >
-              {file === 0 && <span className="coordinate coordinate--rank">{8 - rank}</span>}
-              {rank === 7 && <span className="coordinate coordinate--file">{FILES[file]}</span>}
+              {displayFile === 0 && <span className="coordinate coordinate--rank">{8 - rank}</span>}
+              {displayRank === 7 && <span className="coordinate coordinate--file">{FILES[file]}</span>}
               {piece && (
                 <span className={draggingSquare === square ? 'piece-wrap piece-wrap--dragging' : 'piece-wrap'}>
                   <ChessPiece piece={piece} />

@@ -1,6 +1,7 @@
 import { isKingInCheck } from '../engine/moves'
 import { useGame } from '../state/useGame'
 import { Board } from './Board'
+import { NewGameDialog } from './NewGameDialog'
 import { PromotionDialog } from './PromotionDialog'
 
 export function App() {
@@ -8,8 +9,8 @@ export function App() {
   const turn = game.position.turn === 'white' ? 'White' : 'Black'
   const checkedColor = isKingInCheck(game.position, game.position.turn) ? game.position.turn : null
 
-  let heading = `${turn} to move`
-  let kicker = checkedColor ? 'Check' : 'Local play'
+  let heading = game.thinking ? 'Computer is thinking' : `${turn} to move`
+  let kicker = game.thinking ? 'Depth 3 search' : checkedColor ? 'Check' : game.mode === 'local' ? 'Local play' : 'Vs computer'
   if (game.status.type === 'checkmate') {
     heading = `Checkmate — ${game.status.winner === 'white' ? 'White' : 'Black'} wins`
     kicker = 'Game over'
@@ -23,53 +24,55 @@ export function App() {
 
   return (
     <>
-      <main className="app-shell" inert={game.pendingPromotion ? true : undefined}>
-      <header className="masthead">
-        <div>
-          <p className="eyebrow">Over the board</p>
-          <h1>Chess</h1>
-        </div>
-        <div className={`turn-indicator turn-indicator--${game.position.turn}`} aria-live="polite">
-          <span className="turn-indicator__piece" />
-          <span>
-            <small>{game.status.type === 'playing' ? 'Now playing' : 'Finished'}</small>
-            <strong>{game.status.type === 'playing' ? turn : 'Game over'}</strong>
-          </span>
-        </div>
-      </header>
+      <main className="app-shell" inert={game.pendingPromotion || game.mode === null ? true : undefined}>
+        <header className="masthead">
+          <div>
+            <p className="eyebrow">Over the board</p>
+            <h1>Chess</h1>
+          </div>
+          <div className={`turn-indicator turn-indicator--${game.position.turn}`} aria-live="polite">
+            <span className={`turn-indicator__piece${game.thinking ? ' turn-indicator__piece--thinking' : ''}`} />
+            <span>
+              <small>{game.thinking ? 'Calculating' : game.status.type === 'playing' ? 'Now playing' : 'Finished'}</small>
+              <strong>{game.status.type === 'playing' ? turn : 'Game over'}</strong>
+            </span>
+          </div>
+        </header>
 
-      <section className="game-stage" aria-label="Local chess game">
-        <Board
-          position={game.position}
-          selectedSquare={game.selectedSquare}
-          legalMoves={game.legalMoves}
-          checkedColor={checkedColor}
-          disabled={game.status.type !== 'playing'}
-          onChooseSquare={game.chooseSquare}
-          onSelectSquare={game.selectSquare}
-          onMoveTo={game.moveTo}
-        />
-        <aside className="game-note" aria-live="polite">
-          <span className="game-note__number">02</span>
-          <p>{kicker}</p>
-          <h2>{heading}</h2>
-          <div className="game-note__rule" />
-          {game.status.type === 'playing' ? (
-            <p className="game-note__hint">Every move is legal. The king cannot be left in check.</p>
-          ) : (
-            <button type="button" className="new-game-button" onClick={game.startNewGame}>Play again</button>
-          )}
-        </aside>
-      </section>
+        <section className="game-stage" aria-label="Chess game">
+          <Board
+            position={game.position}
+            selectedSquare={game.selectedSquare}
+            legalMoves={game.legalMoves}
+            checkedColor={checkedColor}
+            disabled={game.inputBlocked}
+            orientation={game.orientation}
+            onChooseSquare={game.chooseSquare}
+            onSelectSquare={game.selectSquare}
+            onMoveTo={game.moveTo}
+          />
+          <aside className="game-note" aria-live="polite">
+            <span className="game-note__number">03</span>
+            <p>{kicker}</p>
+            <h2>{heading}</h2>
+            <div className="game-note__rule" />
+            {game.status.type === 'playing' ? (
+              <p className="game-note__hint">
+                {game.thinking ? 'The board stays live while the worker searches.' : 'Choose carefully. The computer looks three plies ahead.'}
+              </p>
+            ) : (
+              <button type="button" className="new-game-button" onClick={() => game.startNewGame()}>New game</button>
+            )}
+          </aside>
+        </section>
 
-      <footer>
-        <span>Two players · Full rules</span>
-        <span>Local game</span>
-      </footer>
+        <footer>
+          <span>{game.mode === 'local' ? 'Two players · Full rules' : 'Human vs machine · Depth 3'}</span>
+          <button type="button" className="footer-button" onClick={() => game.startNewGame()}>New game</button>
+        </footer>
       </main>
-      {game.pendingPromotion && (
-        <PromotionDialog color={game.position.turn} onChoose={game.promote} />
-      )}
+      {game.mode === null && <NewGameDialog onChoose={game.startNewGame} />}
+      {game.pendingPromotion && <PromotionDialog color={game.position.turn} onChoose={game.promote} />}
     </>
   )
 }
