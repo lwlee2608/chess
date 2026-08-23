@@ -18,11 +18,17 @@ interface GameSnapshot {
   san: string
 }
 
+function isCapture({ position, move }: GameSnapshot): boolean {
+  if (position.board[move.to] !== null) return true
+  return position.board[move.from]?.type === 'pawn' && move.from % 8 !== move.to % 8
+}
+
 export function useGame() {
   const [initial] = useState<PersistedGame | null>(loadGame)
   const [position, setPosition] = useState(() => initial?.position ?? createStartingPosition())
   const [history, setHistory] = useState<GameSnapshot[]>(() => initial?.history ?? [])
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
+  const [justMoved, setJustMoved] = useState<Move | null>(null)
   const [pendingPromotion, setPendingPromotion] = useState<Move[] | null>(null)
   const [mode, setMode] = useState<GameMode | null>(null)
   const [timeControl, setTimeControl] = useState<TimeControl>(() => initial?.timeControl ?? 'off')
@@ -65,6 +71,7 @@ export function useGame() {
     setHistory((entries) => [...entries, { position, move, san: toSan(position, move), clock: settlement.beforeIncrement }])
     setPosition(next)
     setSelectedSquare(null)
+    setJustMoved(move)
   }, [completeMove, position])
 
   useEffect(() => () => workerRef.current?.terminate(), [])
@@ -149,6 +156,7 @@ export function useGame() {
     setPosition(createStartingPosition())
     setHistory([])
     setSelectedSquare(null)
+    setJustMoved(null)
     setPendingPromotion(null)
     setSearchFailed(false)
     setTimeControl(nextTimeControl)
@@ -164,6 +172,7 @@ export function useGame() {
     if (!saved) return
     setPosition(saved.position)
     setHistory(saved.history)
+    setJustMoved(null)
     setTimeControl(saved.timeControl)
     setDifficulty(saved.difficulty ?? 'club')
     setSearchFailed(false)
@@ -194,6 +203,7 @@ export function useGame() {
     restoreClock(history[restoreIndex].clock)
     setHistory((entries) => entries.slice(0, restoreIndex))
     setSelectedSquare(null)
+    setJustMoved(null)
     setPendingPromotion(null)
   }
 
@@ -210,6 +220,8 @@ export function useGame() {
     orientation: mode === 'ai-black' ? 'black' as const : 'white' as const,
     moves: history.map(({ san }) => san),
     lastMove: history.at(-1)?.move ?? null,
+    animateMove: justMoved,
+    animateCapture: justMoved !== null && history.length > 0 && isCapture(history[history.length - 1]),
     canUndo: !computerTurn && (mode === 'local' ? history.length > 0 : aiRestoreIndex >= 0),
     clock,
     timeControl,

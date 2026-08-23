@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import type { Move, Position } from '../engine/types'
 import { FILES, indexToSquare } from '../engine/types'
 import { ChessPiece } from './pieces'
@@ -8,6 +9,8 @@ interface BoardProps {
   selectedSquare: number | null
   legalMoves: Move[]
   lastMove: Move | null
+  animateMove: Move | null
+  animateCapture: boolean
   checkedColor: Position['turn'] | null
   disabled: boolean
   orientation: Position['turn']
@@ -16,11 +19,24 @@ interface BoardProps {
   onMoveTo: (square: number) => boolean
 }
 
+function slideOrigins(position: Position, move: Move | null): Map<number, number> {
+  if (!move) return new Map()
+  const origins = new Map([[move.to, move.from]])
+  const piece = position.board[move.to]
+  if (piece?.type === 'king' && Math.abs((move.to % 8) - (move.from % 8)) === 2) {
+    const kingSide = move.to > move.from
+    origins.set(kingSide ? move.to - 1 : move.to + 1, kingSide ? move.to + 1 : move.to - 2)
+  }
+  return origins
+}
+
 export function Board({
   position,
   selectedSquare,
   legalMoves,
   lastMove,
+  animateMove,
+  animateCapture,
   checkedColor,
   disabled,
   orientation,
@@ -36,13 +52,31 @@ export function Board({
     y: number
     wasSelected: boolean
   } | null>(null)
+  const dragNode = useRef<HTMLElement | null>(null)
+  const pendingDrop = useRef<Move | null | undefined>(undefined)
+  const droppedMove = useRef<Move | null>(null)
   const suppressNextClick = useRef(false)
   const legalTargets = new Set(legalMoves.map(({ to }) => to))
+  const flip = orientation === 'white' ? 1 : -1
+
+  if (pendingDrop.current !== undefined && animateMove !== pendingDrop.current) {
+    droppedMove.current = animateMove
+    pendingDrop.current = undefined
+  }
+
+  const origins = animateMove === droppedMove.current ? new Map<number, number>() : slideOrigins(position, animateMove)
+
+  const releaseDrag = () => {
+    dragNode.current?.style.removeProperty('--drag-x')
+    dragNode.current?.style.removeProperty('--drag-y')
+    dragNode.current = null
+    pointerStart.current = null
+    setDraggingSquare(null)
+  }
 
   const finishPointer = (event: React.PointerEvent<HTMLButtonElement>) => {
     const start = pointerStart.current
-    pointerStart.current = null
-    setDraggingSquare(null)
+    releaseDrag()
     if (!start || start.id !== event.pointerId) return
 
     const distance = Math.hypot(event.clientX - start.x, event.clientY - start.y)
@@ -53,7 +87,7 @@ export function Board({
 
     const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-square]')
     const targetSquare = Number(target?.dataset.square)
-    if (Number.isInteger(targetSquare)) onMoveTo(targetSquare)
+    if (Number.isInteger(targetSquare) && onMoveTo(targetSquare)) pendingDrop.current = animateMove
   }
 
   return (
@@ -71,6 +105,12 @@ export function Board({
           const isCapture = isTarget && piece !== null
           const isCheckedKing = piece?.type === 'king' && piece.color === checkedColor
           const isLastMove = lastMove?.from === square || lastMove?.to === square
+          const isCaptured = animateCapture && animateMove?.to === square
+          const slideFrom = origins.get(square)
+          const slideStyle = slideFrom === undefined ? undefined : ({
+            '--slide-x': String(flip * ((slideFrom % 8) - file)),
+            '--slide-y': String(flip * (Math.floor(slideFrom / 8) - rank)),
+          } as CSSProperties)
 
           return (
             <button
@@ -78,7 +118,7 @@ export function Board({
               role="gridcell"
               aria-label={`${indexToSquare(square)}${piece ? `, ${piece.color} ${piece.type}` : ''}`}
               aria-selected={isSelected}
-              className={`square square--${isLight ? 'light' : 'dark'}${isSelected ? ' square--selected' : ''}${isTarget ? ' square--target' : ''}${isCapture ? ' square--capture' : ''}${isCheckedKing ? ' square--check' : ''}${isLastMove ? ' square--last' : ''}`}
+              className={`square square--${isLight ? 'light' : 'dark'}${isSelected ? ' square--selected' : ''}${isTarget ? ' square--target' : ''}${isCapture ? ' square--capture' : ''}${isCheckedKing ? ' square--check' : ''}${isLastMove ? ' square--last' : ''}${isCaptured ? ' square--captured' : ''}`}
               data-square={square}
               disabled={disabled}
               key={square}
@@ -99,26 +139,30 @@ export function Board({
                   y: event.clientY,
                   wasSelected: selectedSquare === square,
                 }
+                dragNode.current = event.currentTarget.querySelector<HTMLElement>('.piece-wrap')
                 event.currentTarget.setPointerCapture(event.pointerId)
                 if (selectedSquare !== square) onSelectSquare(square)
               }}
               onPointerMove={(event) => {
                 const start = pointerStart.current
                 if (!start || start.id !== event.pointerId) return
-                if (Math.hypot(event.clientX - start.x, event.clientY - start.y) >= 8) {
-                  setDraggingSquare(start.square)
-                }
+                const offsetX = event.clientX - start.x
+                const offsetY = event.clientY - start.y
+                if (Math.hypot(offsetX, offsetY) < 8) return
+                setDraggingSquare(start.square)
+                dragNode.current?.style.setProperty('--drag-x', `${offsetX}px`)
+                dragNode.current?.style.setProperty('--drag-y', `${offsetY}px`)
               }}
               onPointerUp={finishPointer}
-              onPointerCancel={() => {
-                pointerStart.current = null
-                setDraggingSquare(null)
-              }}
+              onPointerCancel={releaseDrag}
             >
               {displayFile === 0 && <span className="coordinate coordinate--rank">{8 - rank}</span>}
               {displayRank === 7 && <span className="coordinate coordinate--file">{FILES[file]}</span>}
               {piece && (
-                <span className={draggingSquare === square ? 'piece-wrap piece-wrap--dragging' : 'piece-wrap'}>
+                <span
+                  className={`piece-wrap${draggingSquare === square ? ' piece-wrap--dragging' : ''}${slideFrom === undefined ? '' : ' piece-wrap--slide'}`}
+                  style={slideStyle}
+                >
                   <ChessPiece piece={piece} />
                 </span>
               )}

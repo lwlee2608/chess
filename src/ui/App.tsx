@@ -50,6 +50,8 @@ export function App() {
             selectedSquare={game.selectedSquare}
             legalMoves={game.legalMoves}
             lastMove={game.lastMove}
+            animateMove={game.animateMove}
+            animateCapture={game.animateCapture}
             checkedColor={checkedColor}
             disabled={game.inputBlocked}
             orientation={game.orientation}
