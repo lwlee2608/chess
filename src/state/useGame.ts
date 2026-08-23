@@ -86,7 +86,7 @@ export function useGame() {
       return
     }
     saveGame({ position, history, mode, timeControl, clock })
-  }, [clock, history, mode, position, resumed, status.type, timeControl])
+  }, [history, mode, position, resumed, status.type, timeControl])
 
   useEffect(() => {
     if (!resumed || mode === null || status.type !== 'playing') return
