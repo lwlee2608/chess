@@ -13,7 +13,11 @@ export function PromotionDialog({ color, onChoose }: PromotionDialogProps) {
   const optionsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    const invokingElement = document.activeElement instanceof HTMLElement ? document.activeElement : null
     optionsRef.current?.querySelector('button')?.focus()
+    return () => {
+      window.setTimeout(() => invokingElement?.focus())
+    }
   }, [])
 
   const containFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
