@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Color, PromotionPiece } from '../engine/types'
 import { ChessPiece } from './pieces'
 
@@ -9,12 +10,31 @@ interface PromotionDialogProps {
 }
 
 export function PromotionDialog({ color, onChoose }: PromotionDialogProps) {
+  const optionsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    optionsRef.current?.querySelector('button')?.focus()
+  }, [])
+
+  const containFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Tab') return
+    const buttons = Array.from(optionsRef.current?.querySelectorAll('button') ?? [])
+    const first = buttons[0]
+    const last = buttons.at(-1)
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last?.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first?.focus()
+    }
+  }
   return (
     <div className="promotion-backdrop" role="presentation">
       <div className="promotion-dialog" role="dialog" aria-modal="true" aria-labelledby="promotion-title">
         <p className="eyebrow">Pawn promotion</p>
         <h2 id="promotion-title">Choose a piece</h2>
-        <div className="promotion-options">
+        <div className="promotion-options" ref={optionsRef} onKeyDown={containFocus}>
           {OPTIONS.map((type) => (
             <button type="button" key={type} onClick={() => onChoose(type)} aria-label={`Promote to ${type}`}>
               <ChessPiece piece={{ color, type }} />

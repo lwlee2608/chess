@@ -22,7 +22,8 @@ export function App() {
   }
 
   return (
-    <main className="app-shell">
+    <>
+      <main className="app-shell" inert={game.pendingPromotion ? true : undefined}>
       <header className="masthead">
         <div>
           <p className="eyebrow">Over the board</p>
@@ -65,8 +66,10 @@ export function App() {
         <span>Two players · Full rules</span>
         <span>Local game</span>
       </footer>
-
-      {game.pendingPromotion && <PromotionDialog color={game.position.turn} onChoose={game.promote} />}
-    </main>
+      </main>
+      {game.pendingPromotion && (
+        <PromotionDialog color={game.position.turn} onChoose={game.promote} />
+      )}
+    </>
   )
 }

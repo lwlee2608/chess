@@ -126,14 +126,14 @@ h1 {
   -webkit-tap-highlight-color: transparent;
 }
 
-.square--check {
-  background: radial-gradient(circle, #d55a43 0 42%, #9e3527 68%, #67251d 100%);
-}
 
 .square:disabled { cursor: default; }
 
 .square--light { background: #d7c9aa; }
 .square--dark { background: #69745f; }
+.square--check {
+  background: radial-gradient(circle, #d55a43 0 42%, #9e3527 68%, #67251d 100%);
+}
 .square--selected { box-shadow: inset 0 0 0 5px #d29a42; }
 .square:focus-visible { outline: 4px solid var(--rust); outline-offset: -4px; z-index: 3; }
 
