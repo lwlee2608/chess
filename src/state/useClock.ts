@@ -56,10 +56,17 @@ export function useClock(control: TimeControl, turn: Color, running: boolean) {
     return () => window.clearInterval(interval)
   }, [control, running, settle, turn])
 
-  const completeMove = useCallback((color: Color): boolean => {
-    if (control === 'off') return true
-    const settled = settle(color, true)
-    return (color === 'white' ? settled.whiteMs : settled.blackMs) > 0
+  const completeMove = useCallback((color: Color): { accepted: boolean; beforeIncrement: ClockState } => {
+    if (control === 'off') return { accepted: true, beforeIncrement: clockRef.current }
+    const beforeIncrement = settle(color, false)
+    const remaining = color === 'white' ? beforeIncrement.whiteMs : beforeIncrement.blackMs
+    if (remaining <= 0) return { accepted: false, beforeIncrement }
+    const next = color === 'white'
+      ? { ...beforeIncrement, whiteMs: beforeIncrement.whiteMs + beforeIncrement.incrementMs }
+      : { ...beforeIncrement, blackMs: beforeIncrement.blackMs + beforeIncrement.incrementMs }
+    clockRef.current = next
+    setClock(next)
+    return { accepted: true, beforeIncrement }
   }, [control, settle])
 
   const reset = useCallback((nextControl: TimeControl) => {

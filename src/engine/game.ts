@@ -176,7 +176,7 @@ export function hasMatingMaterial(board: Board, color: Color): boolean {
   if (pieces.some((piece) => piece.type === 'pawn' || piece.type === 'rook' || piece.type === 'queen')) return true
   const bishops = pieces.filter((piece) => piece.type === 'bishop').length
   const knights = pieces.filter((piece) => piece.type === 'knight').length
-  return bishops >= 2 || (bishops >= 1 && knights >= 1) || knights >= 3
+  return bishops >= 2 || (bishops >= 1 && knights >= 1) || knights >= 2
 }
 
 export function getGameStatus(position: Position): GameStatus {

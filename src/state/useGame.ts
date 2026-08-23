@@ -45,12 +45,12 @@ export function useGame() {
   const commitMove = useCallback((move: Move) => {
     const next = applyMove(position, move)
     if (next === position) return
-    const clockBeforeMove = { ...clock }
-    if (!completeMove(position.turn)) return
-    setHistory((entries) => [...entries, { position, move, san: toSan(position, move), clock: clockBeforeMove }])
+    const settlement = completeMove(position.turn)
+    if (!settlement.accepted) return
+    setHistory((entries) => [...entries, { position, move, san: toSan(position, move), clock: settlement.beforeIncrement }])
     setPosition(next)
     setSelectedSquare(null)
-  }, [clock, completeMove, position])
+  }, [completeMove, position])
 
   useEffect(() => () => workerRef.current?.terminate(), [])
 
