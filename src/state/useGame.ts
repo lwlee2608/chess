@@ -96,12 +96,22 @@ export function useGame() {
     setMode(nextMode ?? null)
   }
 
+  let aiRestoreIndex = -1
+  if (humanColor !== null) {
+    for (let index = history.length - 1; index >= 0; index -= 1) {
+      if (history[index].position.turn === humanColor) {
+        aiRestoreIndex = index
+        break
+      }
+    }
+  }
+
   const undo = () => {
     if (history.length === 0 || computerTurn) return
+    const restoreIndex = mode === 'local' ? history.length - 1 : aiRestoreIndex
+    if (restoreIndex < 0) return
     searchGeneration.current += 1
     workerRef.current?.terminate()
-    const plies = mode === 'local' ? 1 : Math.min(2, history.length)
-    const restoreIndex = history.length - plies
     setPosition(history[restoreIndex].position)
     setHistory((entries) => entries.slice(0, restoreIndex))
     setSelectedSquare(null)
@@ -120,7 +130,7 @@ export function useGame() {
     orientation: mode === 'ai-black' ? 'black' as const : 'white' as const,
     moves: history.map(({ san }) => san),
     lastMove: history.at(-1)?.move ?? null,
-    canUndo: history.length > 0 && !computerTurn,
+    canUndo: !computerTurn && (mode === 'local' ? history.length > 0 : aiRestoreIndex >= 0),
     chooseSquare,
     selectSquare,
     moveTo,

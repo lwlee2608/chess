@@ -11,7 +11,8 @@ export function toSan(position: Position, move: Move): string {
 
   if (piece.type === 'king' && Math.abs(move.to - move.from) === 2) {
     const next = applyMove(position, move)
-    const suffix = getGameStatus(next).type === 'checkmate' ? '#' : ''
+    const status = getGameStatus(next)
+    const suffix = status.type === 'checkmate' ? '#' : isKingInCheck(next, next.turn) ? '+' : ''
     return `${move.to > move.from ? 'O-O' : 'O-O-O'}${suffix}`
   }
 
