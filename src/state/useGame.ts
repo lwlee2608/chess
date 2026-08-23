@@ -32,7 +32,7 @@ export function useGame() {
   const searchGeneration = useRef(0)
   const engineStatus = useMemo(() => getGameStatus(position), [position])
   const clockRunning = mode !== null && resumed && engineStatus.type === 'playing'
-  const { clock, completeMove, flush: flushClock, reset: resetClock, restore: restoreClock } = useClock(
+  const { clock, completeMove, flush: flushClock, snapshot: snapshotClock, reset: resetClock, restore: restoreClock } = useClock(
     timeControl,
     position.turn,
     clockRunning,
@@ -85,8 +85,8 @@ export function useGame() {
       clearSavedGame()
       return
     }
-    saveGame({ position, history, mode, timeControl, clock })
-  }, [history, mode, position, resumed, status.type, timeControl])
+    saveGame({ position, history, mode, timeControl, clock: snapshotClock() })
+  }, [history, mode, position, resumed, snapshotClock, status.type, timeControl])
 
   useEffect(() => {
     if (!resumed || mode === null || status.type !== 'playing') return

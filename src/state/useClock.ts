@@ -72,6 +72,7 @@ export function useClock(control: TimeControl, turn: Color, running: boolean, in
     if (control === 'off') return clockRef.current
     return settle(color, false)
   }, [control, settle])
+  const snapshot = useCallback((): ClockState => clockRef.current, [])
 
   const reset = useCallback((nextControl: TimeControl) => {
     const next = { ...PRESETS[nextControl] }
@@ -86,5 +87,5 @@ export function useClock(control: TimeControl, turn: Color, running: boolean, in
     setClock(next)
   }, [])
 
-  return { clock, completeMove, flush, reset, restore }
+  return { clock, completeMove, flush, snapshot, reset, restore }
 }
