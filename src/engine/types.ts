@@ -1,6 +1,7 @@
 export type Color = 'white' | 'black'
 
 export type PieceType = 'king' | 'queen' | 'rook' | 'bishop' | 'knight' | 'pawn'
+export type PromotionPiece = 'queen' | 'rook' | 'bishop' | 'knight'
 
 export interface Piece {
   color: Color
@@ -9,15 +10,33 @@ export interface Piece {
 
 export type Board = readonly (Piece | null)[]
 
+export interface CastlingRights {
+  whiteKingSide: boolean
+  whiteQueenSide: boolean
+  blackKingSide: boolean
+  blackQueenSide: boolean
+}
+
 export interface Position {
   board: Board
   turn: Color
+  castling: CastlingRights
+  enPassantTarget: number | null
+  halfmoveClock: number
+  positionHistory: readonly string[]
 }
 
 export interface Move {
   from: number
   to: number
+  promotion?: PromotionPiece
 }
+
+export type GameStatus =
+  | { type: 'playing' }
+  | { type: 'checkmate'; winner: Color }
+  | { type: 'stalemate' }
+  | { type: 'draw'; reason: 'threefold repetition' | 'fifty-move rule' | 'insufficient material' }
 
 export const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const
 

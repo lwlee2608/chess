@@ -7,6 +7,8 @@ interface BoardProps {
   position: Position
   selectedSquare: number | null
   legalMoves: Move[]
+  checkedColor: Position['turn'] | null
+  disabled: boolean
   onChooseSquare: (square: number) => void
   onSelectSquare: (square: number) => void
   onMoveTo: (square: number) => boolean
@@ -16,6 +18,8 @@ export function Board({
   position,
   selectedSquare,
   legalMoves,
+  checkedColor,
+  disabled,
   onChooseSquare,
   onSelectSquare,
   onMoveTo,
@@ -58,6 +62,7 @@ export function Board({
           const isSelected = selectedSquare === square
           const isTarget = legalTargets.has(square)
           const isCapture = isTarget && piece !== null
+          const isCheckedKing = piece?.type === 'king' && piece.color === checkedColor
 
           return (
             <button
@@ -65,8 +70,9 @@ export function Board({
               role="gridcell"
               aria-label={`${indexToSquare(square)}${piece ? `, ${piece.color} ${piece.type}` : ''}`}
               aria-selected={isSelected}
-              className={`square square--${isLight ? 'light' : 'dark'}${isSelected ? ' square--selected' : ''}${isTarget ? ' square--target' : ''}${isCapture ? ' square--capture' : ''}`}
+              className={`square square--${isLight ? 'light' : 'dark'}${isSelected ? ' square--selected' : ''}${isTarget ? ' square--target' : ''}${isCapture ? ' square--capture' : ''}${isCheckedKing ? ' square--check' : ''}`}
               data-square={square}
+              disabled={disabled}
               key={square}
               onClick={() => {
                 if (suppressNextClick.current) {

@@ -29,5 +29,14 @@ export function createStartingPosition(): Position {
   return {
     board: createStartingBoard(),
     turn: 'white',
+    castling: {
+      whiteKingSide: true,
+      whiteQueenSide: true,
+      blackKingSide: true,
+      blackQueenSide: true,
+    },
+    enPassantTarget: null,
+    halfmoveClock: 0,
+    positionHistory: [],
   }
 }
