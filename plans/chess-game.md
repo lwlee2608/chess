@@ -17,7 +17,7 @@ A browser chess game with rules written from scratch: legal moves, checkmate and
 - **Extras in scope?** — Algebraic move history, undo/takeback, save across refresh, chess clock. All four confirmed.
 
 ## Progress
-Phase 3 of 6 · 22/35 tasks
+Phase 4 of 6 · 27/35 tasks
 
 ### Phase 1 — Move pieces around a real board
 Two people can push pieces on screen and every piece moves the way it should, though nothing stops an illegal king capture yet.
@@ -55,11 +55,11 @@ Pick a color from a New Game screen and the machine answers your moves.
 
 ### Phase 4 — Follow the game and take a move back
 A notation panel records the game and a button walks a bad move back.
-- [ ] Generate SAN including disambiguation, capture, check and mate suffixes, and O-O (src/engine/san.ts)
-- [ ] Build the move-history panel, paired by move number (src/ui/MoveList.tsx)
-- [ ] Keep an undoable move stack in engine state instead of mutating the board (src/engine/game.ts)
-- [ ] Wire the Undo button: one ply in hot-seat, two plies against the AI (src/ui/App.tsx)
-- [ ] Highlight the from/to squares of the last move played (src/ui/Board.tsx)
+- [x] Generate SAN including disambiguation, capture, check and mate suffixes, and O-O (src/engine/san.ts)
+- [x] Build the move-history panel, paired by move number (src/ui/MoveList.tsx)
+- [x] Keep an undoable move stack in engine state instead of mutating the board (src/engine/game.ts)
+- [x] Wire the Undo button: one ply in hot-seat, two plies against the AI (src/ui/App.tsx)
+- [x] Highlight the from/to squares of the last move played (src/ui/Board.tsx)
 **Demo:** Play 1. e4 e5 2. Nf3 — the panel reads `1. e4 e5  2. Nf3`. Hit Undo against the AI and both its reply and your move disappear.
 
 ### Phase 5 — Play with a clock

@@ -2,6 +2,7 @@ import { isKingInCheck } from '../engine/moves'
 import { useGame } from '../state/useGame'
 import { Board } from './Board'
 import { NewGameDialog } from './NewGameDialog'
+import { MoveList } from './MoveList'
 import { PromotionDialog } from './PromotionDialog'
 
 export function App() {
@@ -44,6 +45,7 @@ export function App() {
             position={game.position}
             selectedSquare={game.selectedSquare}
             legalMoves={game.legalMoves}
+            lastMove={game.lastMove}
             checkedColor={checkedColor}
             disabled={game.inputBlocked}
             orientation={game.orientation}
@@ -51,18 +53,15 @@ export function App() {
             onSelectSquare={game.selectSquare}
             onMoveTo={game.moveTo}
           />
-          <aside className="game-note" aria-live="polite">
-            <span className="game-note__number">03</span>
-            <p>{kicker}</p>
-            <h2>{heading}</h2>
-            <div className="game-note__rule" />
-            {game.status.type === 'playing' ? (
-              <p className="game-note__hint">
-                {game.thinking ? 'The board stays live while the worker searches.' : 'Choose carefully. The computer looks three plies ahead.'}
-              </p>
-            ) : (
-              <button type="button" className="new-game-button" onClick={() => game.startNewGame()}>New game</button>
-            )}
+          <aside className="game-sidebar" aria-live="polite">
+            <div className="game-note">
+              <span className="game-note__number">04</span>
+              <p>{kicker}</p>
+              <h2>{heading}</h2>
+              <div className="game-note__rule" />
+            </div>
+            <MoveList moves={game.moves} />
+            <button type="button" className="undo-button" disabled={!game.canUndo} onClick={game.undo}>Undo</button>
           </aside>
         </section>
 
