@@ -16,8 +16,8 @@ const PRESETS: Record<TimeControl, ClockState> = {
   '15+10': { whiteMs: 900_000, blackMs: 900_000, incrementMs: 10_000 },
 }
 
-export function useClock(control: TimeControl, turn: Color, running: boolean) {
-  const [clock, setClock] = useState<ClockState>(() => ({ ...PRESETS[control] }))
+export function useClock(control: TimeControl, turn: Color, running: boolean, initialClock?: ClockState) {
+  const [clock, setClock] = useState<ClockState>(() => initialClock ? { ...initialClock } : { ...PRESETS[control] })
   const clockRef = useRef(clock)
   const lastTick = useRef(0)
   useEffect(() => {
@@ -68,6 +68,11 @@ export function useClock(control: TimeControl, turn: Color, running: boolean) {
     setClock(next)
     return { accepted: true, beforeIncrement }
   }, [control, settle])
+  const flush = useCallback((color: Color): ClockState => {
+    if (control === 'off') return clockRef.current
+    return settle(color, false)
+  }, [control, settle])
+  const snapshot = useCallback((): ClockState => clockRef.current, [])
 
   const reset = useCallback((nextControl: TimeControl) => {
     const next = { ...PRESETS[nextControl] }
@@ -82,5 +87,5 @@ export function useClock(control: TimeControl, turn: Color, running: boolean) {
     setClock(next)
   }, [])
 
-  return { clock, completeMove, reset, restore }
+  return { clock, completeMove, flush, snapshot, reset, restore }
 }

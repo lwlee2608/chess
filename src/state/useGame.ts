@@ -5,6 +5,8 @@ import { toSan } from '../engine/san'
 import type { Color, GameStatus, Move, Position, PromotionPiece } from '../engine/types'
 import { opposite } from '../engine/types'
 import type { GameMode } from '../ui/NewGameDialog'
+import { clearSavedGame, loadGame, saveGame } from './persist'
+import type { PersistedGame } from './persist'
 import { useClock } from './useClock'
 import type { ClockState, TimeControl } from './useClock'
 
@@ -16,17 +18,26 @@ interface GameSnapshot {
 }
 
 export function useGame() {
-  const [position, setPosition] = useState(createStartingPosition)
-  const [history, setHistory] = useState<GameSnapshot[]>([])
+  const [initial] = useState<PersistedGame | null>(loadGame)
+  const [position, setPosition] = useState(() => initial?.position ?? createStartingPosition())
+  const [history, setHistory] = useState<GameSnapshot[]>(() => initial?.history ?? [])
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
   const [pendingPromotion, setPendingPromotion] = useState<Move[] | null>(null)
   const [mode, setMode] = useState<GameMode | null>(null)
-  const [timeControl, setTimeControl] = useState<TimeControl>('off')
+  const [timeControl, setTimeControl] = useState<TimeControl>(() => initial?.timeControl ?? 'off')
+  const [resumeAvailable, setResumeAvailable] = useState(initial !== null)
+  const [resumed, setResumed] = useState(false)
   const workerRef = useRef<Worker | null>(null)
+  const savedAtLoad = useRef(initial)
   const searchGeneration = useRef(0)
   const engineStatus = useMemo(() => getGameStatus(position), [position])
-  const clockRunning = mode !== null && engineStatus.type === 'playing'
-  const { clock, completeMove, reset: resetClock, restore: restoreClock } = useClock(timeControl, position.turn, clockRunning)
+  const clockRunning = mode !== null && resumed && engineStatus.type === 'playing'
+  const { clock, completeMove, flush: flushClock, snapshot: snapshotClock, reset: resetClock, restore: restoreClock } = useClock(
+    timeControl,
+    position.turn,
+    clockRunning,
+    initial?.clock,
+  )
 
   const flaggedColor: Color | null = timeControl === 'off'
     ? null
@@ -39,8 +50,8 @@ export function useGame() {
 
   const humanColor: Color | null = mode === 'ai-white' ? 'white' : mode === 'ai-black' ? 'black' : null
   const legalMoves = useMemo(() => selectedSquare === null ? [] : getLegalMoves(position, selectedSquare), [position, selectedSquare])
-  const computerTurn = mode !== null && humanColor !== null && position.turn !== humanColor && status.type === 'playing'
-  const inputBlocked = computerTurn || status.type !== 'playing'
+  const computerTurn = resumed && mode !== null && humanColor !== null && position.turn !== humanColor && status.type === 'playing'
+  const inputBlocked = !resumed || computerTurn || status.type !== 'playing'
 
   const commitMove = useCallback((move: Move) => {
     const next = applyMove(position, move)
@@ -67,6 +78,25 @@ export function useGame() {
     worker.postMessage(position)
     return () => worker.terminate()
   }, [commitMove, computerTurn, position])
+
+  useEffect(() => {
+    if (!resumed || mode === null) return
+    if (status.type !== 'playing') {
+      clearSavedGame()
+      return
+    }
+    saveGame({ position, history, mode, timeControl, clock: snapshotClock() })
+  }, [history, mode, position, resumed, snapshotClock, status.type, timeControl])
+
+  useEffect(() => {
+    if (!resumed || mode === null || status.type !== 'playing') return
+    const handlePageHide = () => {
+      const settledClock = flushClock(position.turn)
+      saveGame({ position, history, mode, timeControl, clock: settledClock })
+    }
+    window.addEventListener('pagehide', handlePageHide)
+    return () => window.removeEventListener('pagehide', handlePageHide)
+  }, [flushClock, history, mode, position, resumed, status.type, timeControl])
 
   const selectSquare = (square: number) => {
     if (inputBlocked) return
@@ -107,13 +137,29 @@ export function useGame() {
   const startNewGame = (nextMode?: GameMode, nextTimeControl: TimeControl = 'off') => {
     searchGeneration.current += 1
     workerRef.current?.terminate()
+    clearSavedGame()
+    savedAtLoad.current = null
     setPosition(createStartingPosition())
     setHistory([])
     setSelectedSquare(null)
     setPendingPromotion(null)
     setTimeControl(nextTimeControl)
     resetClock(nextTimeControl)
+    setResumeAvailable(false)
+    setResumed(nextMode !== undefined)
     setMode(nextMode ?? null)
+  }
+
+  const resumeGame = () => {
+    const saved = savedAtLoad.current
+    if (!saved) return
+    setPosition(saved.position)
+    setHistory(saved.history)
+    setTimeControl(saved.timeControl)
+    restoreClock(saved.clock)
+    setMode(saved.mode)
+    setResumeAvailable(false)
+    setResumed(true)
   }
 
   let aiRestoreIndex = -1
@@ -154,11 +200,14 @@ export function useGame() {
     canUndo: !computerTurn && (mode === 'local' ? history.length > 0 : aiRestoreIndex >= 0),
     clock,
     timeControl,
+    resumeAvailable,
+    resumed,
     chooseSquare,
     selectSquare,
     moveTo,
     promote,
     startNewGame,
+    resumeGame,
     undo,
   }
 }
