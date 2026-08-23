@@ -32,7 +32,7 @@ export function useGame() {
   const searchGeneration = useRef(0)
   const engineStatus = useMemo(() => getGameStatus(position), [position])
   const clockRunning = mode !== null && resumed && engineStatus.type === 'playing'
-  const { clock, completeMove, reset: resetClock, restore: restoreClock } = useClock(
+  const { clock, completeMove, flush: flushClock, reset: resetClock, restore: restoreClock } = useClock(
     timeControl,
     position.turn,
     clockRunning,
@@ -87,6 +87,16 @@ export function useGame() {
     }
     saveGame({ position, history, mode, timeControl, clock })
   }, [clock, history, mode, position, resumed, status.type, timeControl])
+
+  useEffect(() => {
+    if (!resumed || mode === null || status.type !== 'playing') return
+    const handlePageHide = () => {
+      const settledClock = flushClock(position.turn)
+      saveGame({ position, history, mode, timeControl, clock: settledClock })
+    }
+    window.addEventListener('pagehide', handlePageHide)
+    return () => window.removeEventListener('pagehide', handlePageHide)
+  }, [flushClock, history, mode, position, resumed, status.type, timeControl])
 
   const selectSquare = (square: number) => {
     if (inputBlocked) return
