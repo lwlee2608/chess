@@ -1,5 +1,6 @@
 import { isKingInCheck } from '../engine/moves'
 import { useGame } from '../state/useGame'
+import { Clock } from './Clock'
 import { Board } from './Board'
 import { NewGameDialog } from './NewGameDialog'
 import { MoveList } from './MoveList'
@@ -21,8 +22,10 @@ export function App() {
   } else if (game.status.type === 'draw') {
     heading = `Draw — ${game.status.reason[0].toUpperCase()}${game.status.reason.slice(1)}`
     kicker = 'Game over'
+  } else if (game.status.type === 'timeout') {
+    heading = game.status.winner ? `${game.status.winner === 'white' ? 'White' : 'Black'} wins on time` : 'Draw — Timeout'
+    kicker = 'Flag fall'
   }
-
   return (
     <>
       <main className="app-shell" inert={game.pendingPromotion || game.mode === null ? true : undefined}>
@@ -54,8 +57,14 @@ export function App() {
             onMoveTo={game.moveTo}
           />
           <aside className="game-sidebar" aria-live="polite">
+            {game.timeControl !== 'off' && (
+              <div className="clocks">
+                <Clock color="black" milliseconds={game.clock.blackMs} active={game.position.turn === 'black' && game.status.type === 'playing'} />
+                <Clock color="white" milliseconds={game.clock.whiteMs} active={game.position.turn === 'white' && game.status.type === 'playing'} />
+              </div>
+            )}
             <div className="game-note">
-              <span className="game-note__number">04</span>
+              <span className="game-note__number">05</span>
               <p>{kicker}</p>
               <h2>{heading}</h2>
               <div className="game-note__rule" />

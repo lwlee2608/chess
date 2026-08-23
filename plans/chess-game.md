@@ -17,7 +17,7 @@ A browser chess game with rules written from scratch: legal moves, checkmate and
 - **Extras in scope?** — Algebraic move history, undo/takeback, save across refresh, chess clock. All four confirmed.
 
 ## Progress
-Phase 4 of 6 · 27/35 tasks
+Phase 5 of 6 · 31/35 tasks
 
 ### Phase 1 — Move pieces around a real board
 Two people can push pieces on screen and every piece moves the way it should, though nothing stops an illegal king capture yet.
@@ -64,10 +64,10 @@ A notation panel records the game and a button walks a bad move back.
 
 ### Phase 5 — Play with a clock
 Games can be timed, and running out of time loses.
-- [ ] Add time-control presets to the New Game screen (Off / 5+0 / 10+0 / 15+10) (src/ui/NewGameDialog.tsx)
-- [ ] Count down the side to move and apply the increment on move completion (src/state/useClock.ts)
-- [ ] Display both clocks, highlighting the one that is running (src/ui/Clock.tsx)
-- [ ] End the game on flag fall — a draw instead if the winner has insufficient material (src/engine/game.ts, src/ui/App.tsx)
+- [x] Add time-control presets to the New Game screen (Off / 5+0 / 10+0 / 15+10) (src/ui/NewGameDialog.tsx)
+- [x] Count down the side to move and apply the increment on move completion (src/state/useClock.ts)
+- [x] Display both clocks, highlighting the one that is running (src/ui/Clock.tsx)
+- [x] End the game on flag fall — a draw instead if the winner has insufficient material (src/engine/game.ts, src/ui/App.tsx)
 **Demo:** New Game → 5+0 → play a few moves and watch your clock tick only on your turn. Let one side sit until it hits 0:00; the banner reads "White wins on time".
 
 ### Phase 6 — Come back to an unfinished game

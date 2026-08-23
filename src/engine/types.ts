@@ -37,6 +37,7 @@ export type GameStatus =
   | { type: 'checkmate'; winner: Color }
   | { type: 'stalemate' }
   | { type: 'draw'; reason: 'threefold repetition' | 'fifty-move rule' | 'insufficient material' }
+  | { type: 'timeout'; winner: Color | null }
 
 export const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const
 

@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createStartingPosition } from '../engine/board'
-import { applyMove, getGameStatus, getLegalMoves } from '../engine/game'
+import { applyMove, getGameStatus, getLegalMoves, hasMatingMaterial } from '../engine/game'
 import { toSan } from '../engine/san'
-import type { Color, Move, Position, PromotionPiece } from '../engine/types'
+import type { Color, GameStatus, Move, Position, PromotionPiece } from '../engine/types'
+import { opposite } from '../engine/types'
 import type { GameMode } from '../ui/NewGameDialog'
+import { useClock } from './useClock'
+import type { ClockState, TimeControl } from './useClock'
 
 interface GameSnapshot {
   position: Position
   move: Move
+  clock: ClockState
   san: string
 }
 
@@ -17,22 +21,36 @@ export function useGame() {
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
   const [pendingPromotion, setPendingPromotion] = useState<Move[] | null>(null)
   const [mode, setMode] = useState<GameMode | null>(null)
+  const [timeControl, setTimeControl] = useState<TimeControl>('off')
   const workerRef = useRef<Worker | null>(null)
   const searchGeneration = useRef(0)
+  const engineStatus = useMemo(() => getGameStatus(position), [position])
+  const clockRunning = mode !== null && engineStatus.type === 'playing'
+  const { clock, completeMove, reset: resetClock, restore: restoreClock } = useClock(timeControl, position.turn, clockRunning)
+
+  const flaggedColor: Color | null = timeControl === 'off'
+    ? null
+    : clock.whiteMs <= 0 ? 'white' : clock.blackMs <= 0 ? 'black' : null
+  let status: GameStatus = engineStatus
+  if (flaggedColor !== null && engineStatus.type === 'playing') {
+    const winner = opposite(flaggedColor)
+    status = { type: 'timeout', winner: hasMatingMaterial(position.board, winner) ? winner : null }
+  }
 
   const humanColor: Color | null = mode === 'ai-white' ? 'white' : mode === 'ai-black' ? 'black' : null
   const legalMoves = useMemo(() => selectedSquare === null ? [] : getLegalMoves(position, selectedSquare), [position, selectedSquare])
-  const status = useMemo(() => getGameStatus(position), [position])
   const computerTurn = mode !== null && humanColor !== null && position.turn !== humanColor && status.type === 'playing'
   const inputBlocked = computerTurn || status.type !== 'playing'
 
   const commitMove = useCallback((move: Move) => {
     const next = applyMove(position, move)
     if (next === position) return
-    setHistory((entries) => [...entries, { position, move, san: toSan(position, move) }])
+    const settlement = completeMove(position.turn)
+    if (!settlement.accepted) return
+    setHistory((entries) => [...entries, { position, move, san: toSan(position, move), clock: settlement.beforeIncrement }])
     setPosition(next)
     setSelectedSquare(null)
-  }, [position])
+  }, [completeMove, position])
 
   useEffect(() => () => workerRef.current?.terminate(), [])
 
@@ -86,13 +104,15 @@ export function useGame() {
     setPendingPromotion(null)
   }
 
-  const startNewGame = (nextMode?: GameMode) => {
+  const startNewGame = (nextMode?: GameMode, nextTimeControl: TimeControl = 'off') => {
     searchGeneration.current += 1
     workerRef.current?.terminate()
     setPosition(createStartingPosition())
     setHistory([])
     setSelectedSquare(null)
     setPendingPromotion(null)
+    setTimeControl(nextTimeControl)
+    resetClock(nextTimeControl)
     setMode(nextMode ?? null)
   }
 
@@ -113,6 +133,7 @@ export function useGame() {
     searchGeneration.current += 1
     workerRef.current?.terminate()
     setPosition(history[restoreIndex].position)
+    restoreClock(history[restoreIndex].clock)
     setHistory((entries) => entries.slice(0, restoreIndex))
     setSelectedSquare(null)
     setPendingPromotion(null)
@@ -131,6 +152,8 @@ export function useGame() {
     moves: history.map(({ san }) => san),
     lastMove: history.at(-1)?.move ?? null,
     canUndo: !computerTurn && (mode === 'local' ? history.length > 0 : aiRestoreIndex >= 0),
+    clock,
+    timeControl,
     chooseSquare,
     selectSquare,
     moveTo,
