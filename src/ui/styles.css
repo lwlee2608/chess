@@ -199,6 +199,24 @@ h1 {
 .game-note { align-self: center; max-width: 270px; }
 .game-note__number { color: var(--rust); font-size: 0.7rem; letter-spacing: 0.18em; }
 .game-note h2 { margin: 18px 0 32px; font-size: clamp(2.4rem, 4vw, 4.6rem); line-height: 0.95; font-style: italic; }
+.clocks {
+  align-self: center;
+  display: grid;
+  gap: 8px;
+}
+
+.clock {
+  width: 130px;
+  border: 1px solid rgba(232, 223, 203, 0.24);
+  padding: 10px 12px;
+  color: #8f9088;
+  background: #1d1e1a;
+}
+
+.clock span { display: block; text-transform: uppercase; font-size: 0.55rem; letter-spacing: 0.12em; }
+.clock strong { display: block; margin-top: 3px; font-size: 1.45rem; font-weight: 500; }
+.clock--active { color: var(--cream); border-color: #d29a42; }
+.clock--low { color: #e06a50; }
 .game-sidebar { align-self: center; width: min(100%, 300px); }
 .game-sidebar .game-note { margin-bottom: 28px; }
 
@@ -304,6 +322,17 @@ h1 {
 .mode-options > button:focus-visible { border-color: var(--rust); transform: translateY(-3px); }
 .mode-options svg { width: min(100%, 120px); }
 .mode-options strong, .mode-options > button > span { display: block; }
+.time-controls {
+  display: flex;
+  gap: 7px;
+  margin: -18px 0 28px;
+  padding: 0;
+  border: 0;
+}
+
+.time-controls legend { margin-bottom: 8px; color: #8f9088; text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.1em; }
+.time-controls button { border: 1px solid rgba(232, 223, 203, 0.24); padding: 8px 12px; color: var(--cream); background: transparent; cursor: pointer; }
+.time-controls .time-control--selected { border-color: var(--rust); background: var(--rust); }
 .mode-options strong { margin: 10px 0 6px; font-family: 'Playfair Display', serif; font-size: 1.25rem; }
 .mode-options > button > span { color: #aaa99f; font-size: 0.64rem; }
 .local-kings { display: flex !important; justify-content: center; }
