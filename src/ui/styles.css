@@ -10,7 +10,7 @@
   --ink: #171815;
   --rust: #b34b34;
   --sage: #74806a;
-  --board-size: min(74vh, 720px, 72vw);
+  --board-size: min(max(calc(100vh - 252px), 340px), 720px, 72vw);
 }
 
 * { box-sizing: border-box; }
@@ -88,7 +88,7 @@ h1 {
   grid-template-columns: var(--board-size) 1fr;
   gap: clamp(36px, 6vw, 92px);
   align-items: center;
-  padding: 36px 0;
+  padding: 22px 0;
 }
 
 .board-frame {
@@ -293,6 +293,7 @@ h1 {
 .move-list ol { margin: 0; padding: 0; list-style: none; }
 .move-list li { min-height: 28px; align-items: center; }
 .move-list li > span { color: #777970; }
+.move-list strong.move--latest { color: #d29a42; }
 
 .undo-button {
   width: 100%;
@@ -306,6 +307,8 @@ h1 {
   cursor: pointer;
 }
 
+.undo-button:not(:disabled):hover,
+.undo-button:focus-visible { border-color: #d29a42; color: #d29a42; }
 .undo-button:disabled { opacity: 0.3; cursor: default; }
 .game-note__rule { width: 72px; height: 3px; margin-bottom: 24px; background: var(--rust); }
 .game-note .game-note__hint { color: #bbb7ad; line-height: 1.8; text-transform: none; letter-spacing: 0.03em; }
@@ -320,6 +323,8 @@ h1 {
   font-size: 0.68rem;
   cursor: pointer;
 }
+
+.footer-button:hover, .footer-button:focus-visible { color: var(--cream); }
 .resume-button {
   float: right;
   border: 1px solid #d29a42;
@@ -347,7 +352,9 @@ h1 {
 
 .new-game-dialog {
   width: min(820px, 100%);
-  padding: clamp(28px, 5vw, 58px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 44px);
   color: var(--cream);
   border: 1px solid rgba(232, 223, 203, 0.36);
   background: #1d1e1a;
@@ -355,8 +362,8 @@ h1 {
 }
 
 .new-game-dialog h2 {
-  margin: 8px 0 34px;
-  font-size: clamp(2.6rem, 6vw, 5rem);
+  margin: 8px 0 28px;
+  font-size: clamp(2.2rem, 4.5vw, 3.6rem);
   font-style: italic;
 }
 
@@ -378,7 +385,7 @@ h1 {
 
 .mode-options > button:hover,
 .mode-options > button:focus-visible { border-color: var(--rust); transform: translateY(-3px); }
-.mode-options svg { width: min(100%, 120px); }
+.mode-options svg { width: min(100%, 96px); }
 .mode-options strong, .mode-options > button > span { display: block; }
 .time-controls {
   display: flex;
