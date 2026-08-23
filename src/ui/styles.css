@@ -275,6 +275,19 @@ h1 {
   font-size: 0.68rem;
   cursor: pointer;
 }
+.resume-button {
+  float: right;
+  border: 1px solid #d29a42;
+  padding: 10px 14px;
+  color: var(--cream);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resume-button strong,
+.resume-button span { display: block; }
+.resume-button span { margin-top: 3px; color: #999a92; font-size: 0.58rem; }
 
 .new-game-backdrop {
   position: fixed;

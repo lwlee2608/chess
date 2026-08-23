@@ -16,8 +16,8 @@ const PRESETS: Record<TimeControl, ClockState> = {
   '15+10': { whiteMs: 900_000, blackMs: 900_000, incrementMs: 10_000 },
 }
 
-export function useClock(control: TimeControl, turn: Color, running: boolean) {
-  const [clock, setClock] = useState<ClockState>(() => ({ ...PRESETS[control] }))
+export function useClock(control: TimeControl, turn: Color, running: boolean, initialClock?: ClockState) {
+  const [clock, setClock] = useState<ClockState>(() => initialClock ? { ...initialClock } : { ...PRESETS[control] })
   const clockRef = useRef(clock)
   const lastTick = useRef(0)
   useEffect(() => {

@@ -17,7 +17,7 @@ A browser chess game with rules written from scratch: legal moves, checkmate and
 - **Extras in scope?** — Algebraic move history, undo/takeback, save across refresh, chess clock. All four confirmed.
 
 ## Progress
-Phase 5 of 6 · 31/35 tasks
+Phase 6 of 6 · 35/35 tasks
 
 ### Phase 1 — Move pieces around a real board
 Two people can push pieces on screen and every piece moves the way it should, though nothing stops an illegal king capture yet.
@@ -72,10 +72,10 @@ Games can be timed, and running out of time loses.
 
 ### Phase 6 — Come back to an unfinished game
 Closing the tab no longer throws the game away.
-- [ ] Serialize position, history, mode, and clock state to localStorage after every move (src/state/persist.ts)
-- [ ] Restore the saved game on load with both clocks paused (src/state/persist.ts, src/state/useGame.ts)
-- [ ] Offer "Resume game" or "New game" on load when a save exists (src/ui/App.tsx)
-- [ ] Clear the save when the game ends or a new game starts (src/state/persist.ts)
+- [x] Serialize position, history, mode, and clock state to localStorage after every move (src/state/persist.ts)
+- [x] Restore the saved game on load with both clocks paused (src/state/persist.ts, src/state/useGame.ts)
+- [x] Offer "Resume game" or "New game" on load when a save exists (src/ui/App.tsx)
+- [x] Clear the save when the game ends or a new game starts (src/state/persist.ts)
 **Demo:** Play five moves, refresh the browser, choose Resume — the same position, move list, and clock times come back.
 
 ## Notes

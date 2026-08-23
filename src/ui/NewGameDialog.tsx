@@ -7,6 +7,8 @@ export type GameMode = 'local' | 'ai-white' | 'ai-black'
 
 interface NewGameDialogProps {
   onChoose: (mode: GameMode, timeControl: TimeControl) => void
+  resumeAvailable: boolean
+  onResume: () => void
 }
 
 const CONTROLS: readonly TimeControl[] = ['off', '5+0', '10+0', '15+10']
@@ -15,13 +17,19 @@ function SideIcon({ color }: { color: Color }) {
   return <ChessPiece piece={{ color, type: 'king' }} />
 }
 
-export function NewGameDialog({ onChoose }: NewGameDialogProps) {
+export function NewGameDialog({ onChoose, resumeAvailable, onResume }: NewGameDialogProps) {
   const [timeControl, setTimeControl] = useState<TimeControl>('off')
 
   return (
     <div className="new-game-backdrop">
       <div className="new-game-dialog" role="dialog" aria-modal="true" aria-labelledby="new-game-title">
         <p className="eyebrow">Set the board</p>
+        {resumeAvailable && (
+          <button type="button" className="resume-button" onClick={onResume}>
+            <strong>Resume game</strong>
+            <span>Continue the saved position</span>
+          </button>
+        )}
         <h2 id="new-game-title">Choose your game</h2>
         <fieldset className="time-controls">
           <legend>Clock</legend>

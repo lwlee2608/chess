@@ -28,7 +28,7 @@ export function App() {
   }
   return (
     <>
-      <main className="app-shell" inert={game.pendingPromotion || game.mode === null ? true : undefined}>
+      <main className="app-shell" inert={game.pendingPromotion || !game.resumed ? true : undefined}>
         <header className="masthead">
           <div>
             <p className="eyebrow">Over the board</p>
@@ -79,7 +79,13 @@ export function App() {
           <button type="button" className="footer-button" onClick={() => game.startNewGame()}>New game</button>
         </footer>
       </main>
-      {game.mode === null && <NewGameDialog onChoose={game.startNewGame} />}
+      {!game.resumed && (
+        <NewGameDialog
+          onChoose={game.startNewGame}
+          resumeAvailable={game.resumeAvailable}
+          onResume={game.resumeGame}
+        />
+      )}
       {game.pendingPromotion && <PromotionDialog color={game.position.turn} onChoose={game.promote} />}
     </>
   )
