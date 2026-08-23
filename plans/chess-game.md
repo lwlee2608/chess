@@ -17,7 +17,7 @@ A browser chess game with rules written from scratch: legal moves, checkmate and
 - **Extras in scope?** — Algebraic move history, undo/takeback, save across refresh, chess clock. All four confirmed.
 
 ## Progress
-Phase 1 of 6 · 8/35 tasks
+Phase 2 of 6 · 16/35 tasks
 
 ### Phase 1 — Move pieces around a real board
 Two people can push pieces on screen and every piece moves the way it should, though nothing stops an illegal king capture yet.
@@ -33,14 +33,14 @@ Two people can push pieces on screen and every piece moves the way it should, th
 
 ### Phase 2 — Play a game that actually ends
 The board now enforces real chess: you cannot leave your king in check, and the game announces mate, stalemate, or a draw.
-- [ ] Add square-attack detection and an is-king-in-check test (src/engine/moves.ts)
-- [ ] Filter out pseudo-legal moves that leave your own king in check (src/engine/game.ts)
-- [ ] Implement castling with rights tracking, empty-square and pass-through-check rules (src/engine/game.ts)
-- [ ] Implement the en-passant target square and capture (src/engine/moves.ts, src/engine/game.ts)
-- [ ] Implement promotion in the engine and add the piece-picker dialog (src/engine/game.ts, src/ui/PromotionDialog.tsx)
-- [ ] Detect checkmate and stalemate and show a game-over banner (src/engine/game.ts, src/ui/App.tsx)
-- [ ] Detect threefold repetition, the fifty-move rule, and insufficient material (src/engine/game.ts)
-- [ ] Highlight the king's square while it is in check (src/ui/Board.tsx)
+- [x] Add square-attack detection and an is-king-in-check test (src/engine/moves.ts)
+- [x] Filter out pseudo-legal moves that leave your own king in check (src/engine/game.ts)
+- [x] Implement castling with rights tracking, empty-square and pass-through-check rules (src/engine/game.ts)
+- [x] Implement the en-passant target square and capture (src/engine/moves.ts, src/engine/game.ts)
+- [x] Implement promotion in the engine and add the piece-picker dialog (src/engine/game.ts, src/ui/PromotionDialog.tsx)
+- [x] Detect checkmate and stalemate and show a game-over banner (src/engine/game.ts, src/ui/App.tsx)
+- [x] Detect threefold repetition, the fifty-move rule, and insufficient material (src/engine/game.ts)
+- [x] Highlight the king's square while it is in check (src/ui/Board.tsx)
 **Demo:** Play 1. f3 e5 2. g4 Qh4# — the banner reads "Checkmate — Black wins". Then start over and castle kingside; the rook jumps with the king.
 
 ### Phase 3 — Play against the computer

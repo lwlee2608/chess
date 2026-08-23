@@ -126,6 +126,12 @@ h1 {
   -webkit-tap-highlight-color: transparent;
 }
 
+.square--check {
+  background: radial-gradient(circle, #d55a43 0 42%, #9e3527 68%, #67251d 100%);
+}
+
+.square:disabled { cursor: default; }
+
 .square--light { background: #d7c9aa; }
 .square--dark { background: #69745f; }
 .square--selected { box-shadow: inset 0 0 0 5px #d29a42; }
@@ -182,6 +188,60 @@ h1 {
 .game-note .game-note__hint { color: #bbb7ad; line-height: 1.8; text-transform: none; letter-spacing: 0.03em; }
 
 footer { border-top: 1px solid rgba(232, 223, 203, 0.28); border-bottom: 0; padding: 16px 0 0; }
+
+.new-game-button {
+  border: 1px solid var(--cream);
+  padding: 12px 18px;
+  color: var(--cream);
+  background: transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+.promotion-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(12, 13, 11, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.promotion-dialog {
+  width: min(540px, 100%);
+  padding: 34px;
+  color: var(--ink);
+  background: var(--cream);
+  border: 1px solid #fff;
+  box-shadow: 0 30px 100px #000;
+}
+
+.promotion-dialog h2 {
+  margin: 8px 0 26px;
+  font-size: 2.4rem;
+  font-style: italic;
+}
+
+.promotion-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.promotion-options button {
+  border: 1px solid rgba(23, 24, 21, 0.32);
+  padding: 8px 5px 10px;
+  background: #d7c9aa;
+  cursor: pointer;
+}
+
+.promotion-options button:hover,
+.promotion-options button:focus-visible { background: #b9c0a7; }
+.promotion-options svg { width: 100%; }
+.promotion-options span { display: block; text-transform: uppercase; font-size: 0.62rem; letter-spacing: 0.08em; }
 
 @media (max-width: 850px) {
   :root { --board-size: min(calc(100vw - 44px), 76vh); }
