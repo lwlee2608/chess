@@ -97,5 +97,6 @@ function King(props: PieceShapeProps) {
 
 export const classic: Skin = {
   label: 'Classic',
+  fontsUrl: 'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;1,600&display=swap',
   pieces: { pawn: Pawn, knight: Knight, bishop: Bishop, rook: Rook, queen: Queen, king: King },
 }

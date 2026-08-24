@@ -6,6 +6,11 @@
     <meta name="theme-color" content="#171815" />
     <meta name="description" content="A focused, local game of chess." />
     <title>Chess — Over the Board</title>
+    <script>
+      try {
+        document.documentElement.dataset.skin = localStorage.getItem('chess.skin.v1') || 'classic'
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -7,5 +7,6 @@ export interface PieceProps {
 
 export interface Skin {
   label: string
+  fontsUrl: string
   pieces: Record<PieceType, ComponentType<PieceProps>>
 }

@@ -194,5 +194,6 @@ function Lion(props: PieceProps) {
 
 export const animals: Skin = {
   label: 'Animals',
+  fontsUrl: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Nunito:wght@500;700&display=swap',
   pieces: { pawn: Hamster, knight: Horse, bishop: Puppy, rook: Bear, queen: Kitten, king: Lion },
 }

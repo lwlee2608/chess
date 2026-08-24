@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;1,600&family=Fredoka:wght@600&family=Nunito:wght@500;700&display=swap');
-
 :root {
   font-family: var(--font-body);
   color: var(--cream);
@@ -12,7 +10,8 @@
   --cream: #e8dfcb;
   --ink: #171815;
   --rust: #b34b34;
-  --gold: var(--gold);
+  --gold: #d29a42;
+  --gold-rgb: 210, 154, 66;
   --bg: #171815;
   --glow: #282a25;
   --surface: #1d1e1a;
@@ -25,6 +24,9 @@
   --dark-square: #69745f;
   --board-border: #0d0e0c;
   --promotion-hover: #b9c0a7;
+  --token-white: var(--cream);
+  --token-black: #262822;
+  --token-border: var(--cream);
   --board-size: min(max(calc(100vh - 252px), 340px), 720px, 72vw);
 }
 
