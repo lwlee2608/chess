@@ -100,13 +100,34 @@ function Puppy(props: PieceProps) {
   return (
     <Svg {...props}>
       <Body />
-      <ellipse cx="11.5" cy="19" rx="3.6" ry="8.5" transform="rotate(10 11.5 19)" />
-      <ellipse cx="33.5" cy="19" rx="3.6" ry="8.5" transform="rotate(-10 33.5 19)" />
-      <circle cx="22.5" cy="19" r="10.5" />
-      <Eyes detail={detail} y={17.5} />
-      <Snout detail={detail} y={22.5} />
-      <path d="M15 29.5c2 1.5 13 1.5 15 0" fill="none" stroke={GOLD} strokeWidth="2.2" />
-      <circle cx="22.5" cy="31.5" r="1.8" fill={GOLD} stroke={GOLD_STROKE} strokeWidth="1" />
+      <ellipse cx="11.5" cy="21" rx="3.6" ry="8.5" transform="rotate(10 11.5 21)" />
+      <ellipse cx="33.5" cy="21" rx="3.6" ry="8.5" transform="rotate(-10 33.5 21)" />
+      <circle cx="22.5" cy="21" r="10.5" />
+      <Eyes detail={detail} y={19.5} />
+      <Snout detail={detail} y={24.5} />
+      <Gold d="M16.5 13.5c0-6 3-11 6-12.5 3 1.5 6 6.5 6 12.5z" />
+      <path d="M22.5 3v10" fill="none" stroke={GOLD_STROKE} strokeWidth="1" />
+    </Svg>
+  )
+}
+
+function Horse(props: PieceProps) {
+  const { detail } = palette(props)
+
+  return (
+    <Svg {...props}>
+      <Body />
+      <path d="M14.5 15l1.5-8.5 5 5.5zM30.5 15l-1.5-8.5-5 5.5z" />
+      <ellipse cx="22.5" cy="19" rx="10" ry="9" />
+      <path d="M15.5 13.5c1.5-1.5 3-4 4.5-3.5s1.5 2 3 1.5 2-2.5 3.5-1.5 1.5 3 3 4" fill={detail} stroke="none" opacity="0.35" />
+      <Eyes detail={detail} y={17} spread={4.8} />
+      <ellipse cx="22.5" cy="24.5" rx="6.5" ry="4.5" />
+      <g fill={detail} stroke="none">
+        <ellipse cx="20" cy="25" rx="1.2" ry="0.9" />
+        <ellipse cx="25" cy="25" rx="1.2" ry="0.9" />
+      </g>
+      <path d="M15 30c2 1.5 13 1.5 15 0" fill="none" stroke={GOLD} strokeWidth="2.2" />
+      <circle cx="22.5" cy="32" r="1.8" fill={GOLD} stroke={GOLD_STROKE} strokeWidth="1" />
     </Svg>
   )
 }
@@ -116,15 +137,15 @@ function Kitten(props: PieceProps) {
 
   return (
     <Svg {...props}>
-      <Body />
-      <path d="M12.5 19l.5-9 8 4zM32.5 19l-.5-9-8 4z" />
-      <circle cx="22.5" cy="21" r="10" />
-      <Eyes detail={detail} y={19.5} tall />
-      <path d="M20.8 23.8h3.4l-1.7 1.9z" fill={detail} stroke="none" />
-      <path fill="none" stroke={detail} strokeWidth="1.1" d="M22.5 25.7c-.8 1.4-1.8 1.6-3 .9M22.5 25.7c.8 1.4 1.8 1.6 3 .9" />
+      <Body x={10} width={25} />
+      <path d="M11 19.5l.5-10.5 9.5 4.5zM34 19.5l-.5-10.5-9.5 4.5z" />
+      <circle cx="22.5" cy="21" r="11.5" />
+      <Eyes detail={detail} y={19.5} spread={4.8} tall />
+      <path d="M20.8 24h3.4l-1.7 1.9z" fill={detail} stroke="none" />
+      <path fill="none" stroke={detail} strokeWidth="1.1" d="M22.5 25.9c-.8 1.4-1.8 1.6-3 .9M22.5 25.9c.8 1.4 1.8 1.6 3 .9" />
       <Whiskers detail={detail} />
-      <Gold d="M16.5 13.5c0-6 3-11 6-12.5 3 1.5 6 6.5 6 12.5z" />
-      <path d="M22.5 3v10" fill="none" stroke={GOLD_STROKE} strokeWidth="1" />
+      <Gold d="M14.5 10l1.8-7.5 6.2 4 6.2-4 1.8 7.5z" />
+      <circle cx="22.5" cy="6.8" r="1.8" fill="#ff5aa0" stroke={GOLD_STROKE} strokeWidth="0.8" />
     </Svg>
   )
 }
@@ -134,30 +155,13 @@ function Bear(props: PieceProps) {
 
   return (
     <Svg {...props}>
-      <Body x={10.5} width={24} />
-      <circle cx="12.5" cy="13" r="4" />
-      <circle cx="32.5" cy="13" r="4" />
-      <circle cx="22.5" cy="21" r="11.5" />
+      <Body x={11.5} width={22} />
+      <circle cx="13.5" cy="13.5" r="3.6" />
+      <circle cx="31.5" cy="13.5" r="3.6" />
+      <circle cx="22.5" cy="21" r="10.5" />
       <Eyes detail={detail} y={19} />
-      <Snout detail={detail} y={24.5} />
-      <Gold d="M14.5 12.5V4h3.2v3h3.2V4h3.2v3h3.2V4h3.2v8.5z" />
-    </Svg>
-  )
-}
-
-function Fox(props: PieceProps) {
-  const { detail } = palette(props)
-
-  return (
-    <Svg {...props}>
-      <Body />
-      <path d="M11.5 18l2-12 8.5 7.5zM33.5 18l-2-12-8.5 7.5z" />
-      <path d="M14 15.5l.8-6.5 4.5 4.2zM31 15.5l-.8-6.5-4.5 4.2z" fill={detail} stroke="none" opacity="0.35" />
-      <path d="M11.5 17c0-5.5 5-8.5 11-8.5s11 3 11 8.5c0 6.5-6.5 12-11 13-4.5-1-11-6.5-11-13z" />
-      <Eyes detail={detail} y={17.5} tall />
-      <ellipse cx="22.5" cy="25" rx="1.9" ry="1.5" fill={detail} stroke="none" />
-      <Gold d="M15.5 9.5l2-6.5 5 3.5 5-3.5 2 6.5z" />
-      <circle cx="22.5" cy="6.8" r="1.6" fill="#ff5aa0" stroke={GOLD_STROKE} strokeWidth="0.8" />
+      <Snout detail={detail} y={24} />
+      <Gold d="M15.5 12.5V4.5h2.8v3h2.8v-3h2.8v3h2.8v-3h2.8v8z" />
     </Svg>
   )
 }
@@ -178,17 +182,17 @@ function Lion(props: PieceProps) {
 
   return (
     <Svg {...props}>
-      <Body x={10} width={25} />
-      <path d={manePath(22.5, 21, 13.5, 12)} />
-      <circle cx="22.5" cy="21" r="10" />
+      <Body x={9.5} width={26} />
+      <path d={manePath(22.5, 21, 14, 12)} />
+      <circle cx="22.5" cy="21" r="10.5" />
       <Eyes detail={detail} y={19} />
       <Snout detail={detail} y={24} />
-      <Gold d="M13.5 11.5L15 1.5l4.5 5 3-5.5 3 5.5 4.5-5 1.5 10z" />
+      <Gold d="M13 11.5L14.5 1l4.8 5.2 3.2-5.7 3.2 5.7L30.5 1 32 11.5z" />
     </Svg>
   )
 }
 
 export const animals: Skin = {
   label: 'Animals',
-  pieces: { pawn: Hamster, knight: Puppy, bishop: Kitten, rook: Bear, queen: Fox, king: Lion },
+  pieces: { pawn: Hamster, knight: Horse, bishop: Puppy, rook: Bear, queen: Kitten, king: Lion },
 }
