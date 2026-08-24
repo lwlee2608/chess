@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { PieceProps, Skin } from './types'
 
 const GOLD = '#f2b94a'
+const GOLD_STROKE = '#5a2c50'
 
 interface Palette {
   fill: string
@@ -11,7 +12,7 @@ interface Palette {
 
 const PALETTES: Record<PieceProps['piece']['color'], Palette> = {
   white: { fill: '#fff7fb', stroke: '#5a2c50', detail: '#5a2c50' },
-  black: { fill: '#5a2c50', stroke: '#a56a97', detail: '#fff7fb' },
+  black: { fill: '#5a2c50', stroke: '#d29ec3', detail: '#fff7fb' },
 }
 
 function palette({ piece }: PieceProps): Palette {
@@ -50,11 +51,11 @@ function Body({ x = 12, width = 21 }: { x?: number; width?: number }) {
   )
 }
 
-function Eyes({ detail, y = 17.5, tall = false }: { detail: string; y?: number; tall?: boolean }) {
+function Eyes({ detail, y = 17.5, spread = 4, tall = false }: { detail: string; y?: number; spread?: number; tall?: boolean }) {
   return (
     <g fill={detail} stroke="none">
-      <ellipse cx="18.5" cy={y} rx="1.4" ry={tall ? 1.9 : 1.4} />
-      <ellipse cx="26.5" cy={y} rx="1.4" ry={tall ? 1.9 : 1.4} />
+      <ellipse cx={22.5 - spread} cy={y} rx="1.4" ry={tall ? 1.9 : 1.4} />
+      <ellipse cx={22.5 + spread} cy={y} rx="1.4" ry={tall ? 1.9 : 1.4} />
     </g>
   )
 }
@@ -73,19 +74,22 @@ function Whiskers({ detail }: { detail: string }) {
   return <path fill="none" stroke={detail} strokeWidth="0.9" d="M9 19.5h5.5M9.5 23l5-1.5M30.5 19.5H36M30.5 21.5l5 1.5" />
 }
 
+function Gold({ d }: { d: string }) {
+  return <path d={d} fill={GOLD} stroke={GOLD_STROKE} strokeWidth="1" />
+}
+
 function Hamster(props: PieceProps) {
   const { detail } = palette(props)
 
   return (
     <Svg {...props}>
-      <Body x={13.5} width={18} />
-      <circle cx="15" cy="12.5" r="3.2" />
-      <circle cx="30" cy="12.5" r="3.2" />
-      <ellipse cx="22.5" cy="21" rx="10.5" ry="9" />
-      <Eyes detail={detail} y={19.5} />
-      <ellipse cx="22.5" cy="24" rx="1.5" ry="1.2" fill={detail} stroke="none" />
-      <path fill="none" stroke={detail} strokeWidth="1.1" d="M20.5 25.5c1 1.4 3 1.4 4 0" />
-      <Whiskers detail={detail} />
+      <Body x={15.5} width={14} />
+      <circle cx="16.5" cy="16" r="2.6" />
+      <circle cx="28.5" cy="16" r="2.6" />
+      <ellipse cx="22.5" cy="22.5" rx="8.5" ry="7.5" />
+      <Eyes detail={detail} y={21.5} spread={3.2} />
+      <ellipse cx="22.5" cy="25" rx="1.3" ry="1" fill={detail} stroke="none" />
+      <path fill="none" stroke={detail} strokeWidth="1.1" d="M20.8 26.4c.9 1.2 2.5 1.2 3.4 0" />
     </Svg>
   )
 }
@@ -101,6 +105,8 @@ function Puppy(props: PieceProps) {
       <circle cx="22.5" cy="19" r="10.5" />
       <Eyes detail={detail} y={17.5} />
       <Snout detail={detail} y={22.5} />
+      <path d="M15 29.5c2 1.5 13 1.5 15 0" fill="none" stroke={GOLD} strokeWidth="2.2" />
+      <circle cx="22.5" cy="31.5" r="1.8" fill={GOLD} stroke={GOLD_STROKE} strokeWidth="1" />
     </Svg>
   )
 }
@@ -111,13 +117,14 @@ function Kitten(props: PieceProps) {
   return (
     <Svg {...props}>
       <Body />
-      <path d="M13 16l.5-10 8.5 4.5zM32 16l-.5-10-8.5 4.5z" />
-      <path d="M15 13.5l.2-4.5 4 2.2zM30 13.5l-.2-4.5-4 2.2z" fill={detail} stroke="none" opacity="0.35" />
-      <circle cx="22.5" cy="19.5" r="10.5" />
-      <Eyes detail={detail} y={18} tall />
-      <path d="M20.8 22.3h3.4l-1.7 1.9z" fill={detail} stroke="none" />
-      <path fill="none" stroke={detail} strokeWidth="1.1" d="M22.5 24.2c-.8 1.4-1.8 1.6-3 .9M22.5 24.2c.8 1.4 1.8 1.6 3 .9" />
+      <path d="M12.5 19l.5-9 8 4zM32.5 19l-.5-9-8 4z" />
+      <circle cx="22.5" cy="21" r="10" />
+      <Eyes detail={detail} y={19.5} tall />
+      <path d="M20.8 23.8h3.4l-1.7 1.9z" fill={detail} stroke="none" />
+      <path fill="none" stroke={detail} strokeWidth="1.1" d="M22.5 25.7c-.8 1.4-1.8 1.6-3 .9M22.5 25.7c.8 1.4 1.8 1.6 3 .9" />
       <Whiskers detail={detail} />
+      <Gold d="M16.5 13.5c0-6 3-11 6-12.5 3 1.5 6 6.5 6 12.5z" />
+      <path d="M22.5 3v10" fill="none" stroke={GOLD_STROKE} strokeWidth="1" />
     </Svg>
   )
 }
@@ -128,13 +135,12 @@ function Bear(props: PieceProps) {
   return (
     <Svg {...props}>
       <Body x={10.5} width={24} />
-      <circle cx="13" cy="11" r="4.2" />
-      <circle cx="32" cy="11" r="4.2" />
-      <circle cx="13" cy="11" r="1.8" fill={detail} stroke="none" opacity="0.35" />
-      <circle cx="32" cy="11" r="1.8" fill={detail} stroke="none" opacity="0.35" />
-      <circle cx="22.5" cy="19.5" r="11.5" />
-      <Eyes detail={detail} y={17.5} />
-      <Snout detail={detail} y={23} />
+      <circle cx="12.5" cy="13" r="4" />
+      <circle cx="32.5" cy="13" r="4" />
+      <circle cx="22.5" cy="21" r="11.5" />
+      <Eyes detail={detail} y={19} />
+      <Snout detail={detail} y={24.5} />
+      <Gold d="M14.5 12.5V4h3.2v3h3.2V4h3.2v3h3.2V4h3.2v8.5z" />
     </Svg>
   )
 }
@@ -150,7 +156,8 @@ function Fox(props: PieceProps) {
       <path d="M11.5 17c0-5.5 5-8.5 11-8.5s11 3 11 8.5c0 6.5-6.5 12-11 13-4.5-1-11-6.5-11-13z" />
       <Eyes detail={detail} y={17.5} tall />
       <ellipse cx="22.5" cy="25" rx="1.9" ry="1.5" fill={detail} stroke="none" />
-      <path d="M17 6.5l1.6-3.5 3.9 2.3 3.9-2.3 1.6 3.5z" fill={GOLD} stroke="#5a2c50" strokeWidth="1" />
+      <Gold d="M15.5 9.5l2-6.5 5 3.5 5-3.5 2 6.5z" />
+      <circle cx="22.5" cy="6.8" r="1.6" fill="#ff5aa0" stroke={GOLD_STROKE} strokeWidth="0.8" />
     </Svg>
   )
 }
@@ -171,14 +178,12 @@ function Lion(props: PieceProps) {
 
   return (
     <Svg {...props}>
-      <Body x={11} width={23} />
-      <path d={manePath(22.5, 20, 13, 12)} />
-      <circle cx="14" cy="12" r="3.2" />
-      <circle cx="31" cy="12" r="3.2" />
-      <circle cx="22.5" cy="20" r="10" />
-      <Eyes detail={detail} y={18} />
-      <Snout detail={detail} y={23} />
-      <path d="M16 8.5l1.5-6 5 3.8 5-3.8 1.5 6z" fill={GOLD} stroke="#5a2c50" strokeWidth="1" />
+      <Body x={10} width={25} />
+      <path d={manePath(22.5, 21, 13.5, 12)} />
+      <circle cx="22.5" cy="21" r="10" />
+      <Eyes detail={detail} y={19} />
+      <Snout detail={detail} y={24} />
+      <Gold d="M13.5 11.5L15 1.5l4.5 5 3-5.5 3 5.5 4.5-5 1.5 10z" />
     </Svg>
   )
 }
