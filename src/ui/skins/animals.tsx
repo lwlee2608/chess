@@ -91,6 +91,7 @@ function Hamster(props: PieceProps) {
       <Eyes detail={detail} y={21.5} spread={3.2} />
       <ellipse cx="22.5" cy="25" rx="1.3" ry="1" fill={detail} stroke="none" />
       <path fill="none" stroke={detail} strokeWidth="1.1" d="M20.8 26.4c.9 1.2 2.5 1.2 3.4 0" />
+      <path fill="none" stroke={detail} strokeWidth="0.9" d="M11 23h4M11.5 25.5l3.5-1M30 23h4M30 24.5l3.5 1" />
     </Svg>
   )
 }
