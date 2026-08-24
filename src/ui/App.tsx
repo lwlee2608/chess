@@ -1,13 +1,17 @@
 import { isKingInCheck } from '../engine/moves'
 import { useGame } from '../state/useGame'
+import { useSkin } from '../state/useSkin'
 import { Clock } from './Clock'
 import { Board } from './Board'
 import { DIFFICULTY_LABELS, NewGameDialog } from './NewGameDialog'
 import { MoveList } from './MoveList'
 import { PromotionDialog } from './PromotionDialog'
+import { SkinContext } from './pieces'
+import { SkinPicker } from './SkinPicker'
 
 export function App() {
   const game = useGame()
+  const [skin, setSkin] = useSkin()
   const turn = game.position.turn === 'white' ? 'White' : 'Black'
   const checkedColor = isKingInCheck(game.position, game.position.turn) ? game.position.turn : null
   const level = DIFFICULTY_LABELS[game.difficulty]
@@ -28,7 +32,7 @@ export function App() {
     kicker = 'Flag fall'
   }
   return (
-    <>
+    <SkinContext value={skin}>
       <main className="app-shell" inert={game.pendingPromotion || !game.resumed ? true : undefined}>
         <header className="masthead">
           <div>
@@ -79,6 +83,7 @@ export function App() {
 
         <footer>
           <span>{game.mode === 'local' ? 'Two players · Full rules' : `Human vs machine · ${level}`}</span>
+          <SkinPicker skin={skin} onChange={setSkin} />
           <button type="button" className="footer-button" onClick={() => game.startNewGame()}>New game</button>
         </footer>
       </main>
@@ -90,6 +95,6 @@ export function App() {
         />
       )}
       {game.pendingPromotion && <PromotionDialog color={game.position.turn} onChoose={game.promote} />}
-    </>
+    </SkinContext>
   )
 }
