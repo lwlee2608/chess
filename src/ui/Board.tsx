@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { Move, Position } from '../engine/types'
 import { FILES, indexToSquare } from '../engine/types'
@@ -17,6 +17,10 @@ interface BoardProps {
   onChooseSquare: (square: number) => void
   onSelectSquare: (square: number) => void
   onMoveTo: (square: number) => boolean
+}
+interface ActiveAnimation {
+  from: number
+  id: number
 }
 
 function slideOrigins(position: Position, move: Move | null): Map<number, number> {
@@ -56,6 +60,9 @@ export function Board({
   const pendingDrop = useRef<Move | null | undefined>(undefined)
   const droppedMove = useRef<Move | null>(null)
   const suppressNextClick = useRef(false)
+  const [activeAnimations, setActiveAnimations] = useState<Map<number, ActiveAnimation>>(() => new Map())
+  const animatedMove = useRef<Move | null>(null)
+  const nextAnimationId = useRef(0)
   const legalTargets = new Set(legalMoves.map(({ to }) => to))
   const flip = orientation === 'white' ? 1 : -1
 
@@ -64,7 +71,28 @@ export function Board({
     pendingDrop.current = undefined
   }
 
-  const origins = animateMove === droppedMove.current ? new Map<number, number>() : slideOrigins(position, animateMove)
+  useLayoutEffect(() => {
+    if (animateMove === animatedMove.current) return
+    animatedMove.current = animateMove
+    if (!animateMove) {
+      setActiveAnimations(new Map())
+      return
+    }
+    if (animateMove === droppedMove.current) return
+    const incoming = slideOrigins(position, animateMove)
+    setActiveAnimations((current) => {
+      const next = new Map<number, ActiveAnimation>()
+      current.forEach((animation, to) => {
+        if (position.board[to] !== null) next.set(to, animation)
+      })
+      incoming.forEach((from, to) => {
+        next.set(to, { from, id: nextAnimationId.current++ })
+      })
+      return next
+    })
+  }, [animateMove, position])
+
+  const animations = activeAnimations
 
   const releaseDrag = () => {
     dragNode.current?.style.removeProperty('--drag-x')
@@ -106,10 +134,10 @@ export function Board({
           const isCheckedKing = piece?.type === 'king' && piece.color === checkedColor
           const isLastMove = lastMove?.from === square || lastMove?.to === square
           const isCaptured = animateCapture && animateMove?.to === square
-          const slideFrom = origins.get(square)
-          const slideStyle = slideFrom === undefined ? undefined : ({
-            '--slide-x': String(flip * ((slideFrom % 8) - file)),
-            '--slide-y': String(flip * (Math.floor(slideFrom / 8) - rank)),
+          const animation = animations.get(square)
+          const slideStyle = animation === undefined ? undefined : ({
+            '--slide-x': String(flip * ((animation.from % 8) - file)),
+            '--slide-y': String(flip * (Math.floor(animation.from / 8) - rank)),
           } as CSSProperties)
 
           return (
@@ -160,8 +188,18 @@ export function Board({
               {displayRank === 7 && <span className="coordinate coordinate--file">{FILES[file]}</span>}
               {piece && (
                 <span
-                  className={`piece-wrap${draggingSquare === square ? ' piece-wrap--dragging' : ''}${slideFrom === undefined ? '' : ' piece-wrap--slide'}`}
+                  className={`piece-wrap${draggingSquare === square ? ' piece-wrap--dragging' : ''}${animation === undefined ? '' : ' piece-wrap--slide'}`}
                   style={slideStyle}
+                  key={animation?.id}
+                  onAnimationEnd={(event) => {
+                    if (event.animationName !== 'piece-slide' || animation === undefined) return
+                    setActiveAnimations((current) => {
+                      if (current.get(square)?.id !== animation.id) return current
+                      const next = new Map(current)
+                      next.delete(square)
+                      return next
+                    })
+                  }}
                 >
                   <ChessPiece piece={piece} />
                 </span>

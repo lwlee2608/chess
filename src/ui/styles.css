@@ -231,7 +231,7 @@ h1 {
 
 /* one square equals 100/83 of the piece box, which is 83% of the square */
 .piece-wrap--slide {
-  animation: piece-slide 190ms cubic-bezier(0.22, 0.72, 0.24, 1);
+  animation: piece-slide 1050ms cubic-bezier(0.22, 0.72, 0.24, 1);
 }
 
 @keyframes piece-slide {
