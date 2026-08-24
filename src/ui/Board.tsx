@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { Move, Position } from '../engine/types'
 import { FILES, indexToSquare } from '../engine/types'
@@ -56,6 +56,8 @@ export function Board({
   const pendingDrop = useRef<Move | null | undefined>(undefined)
   const droppedMove = useRef<Move | null>(null)
   const suppressNextClick = useRef(false)
+  const [activeOrigins, setActiveOrigins] = useState<Map<number, number>>(() => new Map())
+  const animatedMove = useRef<Move | null>(null)
   const legalTargets = new Set(legalMoves.map(({ to }) => to))
   const flip = orientation === 'white' ? 1 : -1
 
@@ -64,7 +66,26 @@ export function Board({
     pendingDrop.current = undefined
   }
 
-  const origins = animateMove === droppedMove.current ? new Map<number, number>() : slideOrigins(position, animateMove)
+  useLayoutEffect(() => {
+    if (animateMove === animatedMove.current) return
+    animatedMove.current = animateMove
+    if (!animateMove) {
+      setActiveOrigins(new Map())
+      return
+    }
+    if (animateMove === droppedMove.current) return
+    const incoming = slideOrigins(position, animateMove)
+    setActiveOrigins((current) => {
+      const next = new Map<number, number>()
+      current.forEach((from, to) => {
+        if (position.board[to] !== null) next.set(to, from)
+      })
+      incoming.forEach((from, to) => next.set(to, from))
+      return next
+    })
+  }, [animateMove, position])
+
+  const origins = activeOrigins
 
   const releaseDrag = () => {
     dragNode.current?.style.removeProperty('--drag-x')
@@ -162,6 +183,15 @@ export function Board({
                 <span
                   className={`piece-wrap${draggingSquare === square ? ' piece-wrap--dragging' : ''}${slideFrom === undefined ? '' : ' piece-wrap--slide'}`}
                   style={slideStyle}
+                  onAnimationEnd={(event) => {
+                    if (event.animationName !== 'piece-slide') return
+                    setActiveOrigins((current) => {
+                      if (!current.has(square)) return current
+                      const next = new Map(current)
+                      next.delete(square)
+                      return next
+                    })
+                  }}
                 >
                   <ChessPiece piece={piece} />
                 </span>
