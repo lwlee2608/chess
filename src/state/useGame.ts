@@ -22,6 +22,7 @@ function isCapture({ position, move }: GameSnapshot): boolean {
   if (position.board[move.to] !== null) return true
   return position.board[move.from]?.type === 'pawn' && move.from % 8 !== move.to % 8
 }
+const AI_MOVE_DELAY_MS = 800
 
 export function useGame() {
   const [initial] = useState<PersistedGame | null>(loadGame)
@@ -79,19 +80,26 @@ export function useGame() {
   useEffect(() => {
     if (!computerTurn) return
     const generation = ++searchGeneration.current
-    const worker = new Worker(new URL('../ai/worker.ts', import.meta.url), { type: 'module' })
-    workerRef.current?.terminate()
-    workerRef.current = worker
-    worker.onmessage = (event: MessageEvent<Move | null>) => {
-      if (generation !== searchGeneration.current || !event.data) return
-      commitMove(event.data)
+    const startSearch = () => {
+      const worker = new Worker(new URL('../ai/worker.ts', import.meta.url), { type: 'module' })
+      workerRef.current?.terminate()
+      workerRef.current = worker
+      worker.onmessage = (event: MessageEvent<Move | null>) => {
+        if (generation !== searchGeneration.current || !event.data) return
+        commitMove(event.data)
+      }
+      worker.onerror = () => {
+        if (generation === searchGeneration.current) setSearchFailed(true)
+      }
+      worker.postMessage({ position, difficulty } satisfies SearchRequest)
     }
-    worker.onerror = () => {
-      if (generation === searchGeneration.current) setSearchFailed(true)
+    const humanJustMoved = history.at(-1)?.position.turn === humanColor
+    const timer = window.setTimeout(startSearch, humanJustMoved ? AI_MOVE_DELAY_MS : 0)
+    return () => {
+      window.clearTimeout(timer)
+      workerRef.current?.terminate()
     }
-    worker.postMessage({ position, difficulty } satisfies SearchRequest)
-    return () => worker.terminate()
-  }, [commitMove, computerTurn, difficulty, position])
+  }, [commitMove, computerTurn, difficulty, history, humanColor, position])
 
   useEffect(() => {
     if (!resumed || mode === null) return
