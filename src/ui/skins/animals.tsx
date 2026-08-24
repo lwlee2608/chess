@@ -8,11 +8,12 @@ interface Palette {
   fill: string
   stroke: string
   detail: string
+  muzzle: string
 }
 
 const PALETTES: Record<PieceProps['piece']['color'], Palette> = {
-  white: { fill: '#fff7fb', stroke: '#5a2c50', detail: '#5a2c50' },
-  black: { fill: '#5a2c50', stroke: '#d29ec3', detail: '#fff7fb' },
+  white: { fill: '#fff7fb', stroke: '#5a2c50', detail: '#5a2c50', muzzle: '#fff7fb' },
+  black: { fill: '#c48bb9', stroke: '#4a1f42', detail: '#341430', muzzle: '#fbe6f0' },
 }
 
 function palette({ piece }: PieceProps): Palette {
@@ -60,10 +61,10 @@ function Eyes({ detail, y = 17.5, spread = 4, tall = false }: { detail: string; 
   )
 }
 
-function Snout({ detail, y = 22.5, muzzle = true }: { detail: string; y?: number; muzzle?: boolean }) {
+function Snout({ detail, muzzle, y = 22.5 }: { detail: string; muzzle: string; y?: number }) {
   return (
     <>
-      {muzzle && <ellipse cx="22.5" cy={y + 1.5} rx="5" ry="3.5" />}
+      <ellipse cx="22.5" cy={y + 1.5} rx="5" ry="3.5" fill={muzzle} />
       <ellipse cx="22.5" cy={y} rx="2" ry="1.5" fill={detail} stroke="none" />
       <path fill="none" stroke={detail} strokeWidth="1.1" d={`M22.5 ${y + 1.5}v1.5M20.3 ${y + 3.6}c1.2 1 3.2 1 4.4 0`} />
     </>
@@ -95,7 +96,7 @@ function Hamster(props: PieceProps) {
 }
 
 function Puppy(props: PieceProps) {
-  const { detail } = palette(props)
+  const { detail, muzzle } = palette(props)
 
   return (
     <Svg {...props}>
@@ -104,7 +105,7 @@ function Puppy(props: PieceProps) {
       <ellipse cx="33.5" cy="21" rx="3.6" ry="8.5" transform="rotate(-10 33.5 21)" />
       <circle cx="22.5" cy="21" r="10.5" />
       <Eyes detail={detail} y={19.5} />
-      <Snout detail={detail} y={24.5} />
+      <Snout detail={detail} muzzle={muzzle} y={24.5} />
       <Gold d="M16.5 13.5c0-6 3-11 6-12.5 3 1.5 6 6.5 6 12.5z" />
       <path d="M22.5 3v10" fill="none" stroke={GOLD_STROKE} strokeWidth="1" />
     </Svg>
@@ -112,7 +113,7 @@ function Puppy(props: PieceProps) {
 }
 
 function Horse(props: PieceProps) {
-  const { detail } = palette(props)
+  const { detail, muzzle } = palette(props)
 
   return (
     <Svg {...props}>
@@ -121,7 +122,7 @@ function Horse(props: PieceProps) {
       <ellipse cx="22.5" cy="19" rx="10" ry="9" />
       <path d="M15.5 13.5c1.5-1.5 3-4 4.5-3.5s1.5 2 3 1.5 2-2.5 3.5-1.5 1.5 3 3 4" fill={detail} stroke="none" opacity="0.35" />
       <Eyes detail={detail} y={17} spread={4.8} />
-      <ellipse cx="22.5" cy="24.5" rx="6.5" ry="4.5" />
+      <ellipse cx="22.5" cy="24.5" rx="6.5" ry="4.5" fill={muzzle} />
       <g fill={detail} stroke="none">
         <ellipse cx="20" cy="25" rx="1.2" ry="0.9" />
         <ellipse cx="25" cy="25" rx="1.2" ry="0.9" />
@@ -151,7 +152,7 @@ function Kitten(props: PieceProps) {
 }
 
 function Bear(props: PieceProps) {
-  const { detail } = palette(props)
+  const { detail, muzzle } = palette(props)
 
   return (
     <Svg {...props}>
@@ -160,7 +161,7 @@ function Bear(props: PieceProps) {
       <circle cx="31.5" cy="13.5" r="3.6" />
       <circle cx="22.5" cy="21" r="10.5" />
       <Eyes detail={detail} y={19} />
-      <Snout detail={detail} y={24} />
+      <Snout detail={detail} muzzle={muzzle} y={24} />
       <Gold d="M15.5 12.5V4.5h2.8v3h2.8v-3h2.8v3h2.8v-3h2.8v8z" />
     </Svg>
   )
@@ -178,7 +179,7 @@ function manePath(cx: number, cy: number, r: number, bumps: number): string {
 }
 
 function Lion(props: PieceProps) {
-  const { detail } = palette(props)
+  const { detail, muzzle } = palette(props)
 
   return (
     <Svg {...props}>
@@ -186,7 +187,7 @@ function Lion(props: PieceProps) {
       <path d={manePath(22.5, 21, 14, 12)} />
       <circle cx="22.5" cy="21" r="10.5" />
       <Eyes detail={detail} y={19} />
-      <Snout detail={detail} y={24} />
+      <Snout detail={detail} muzzle={muzzle} y={24} />
       <Gold d="M13 11.5L14.5 1l4.8 5.2 3.2-5.7 3.2 5.7L30.5 1 32 11.5z" />
     </Svg>
   )
