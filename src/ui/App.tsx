@@ -1,5 +1,6 @@
 import { isKingInCheck } from '../engine/moves'
 import { useGame } from '../state/useGame'
+import { useHistoryPanel } from '../state/useHistoryPanel'
 import { useSkin } from '../state/useSkin'
 import { Clock } from './Clock'
 import { Board } from './Board'
@@ -12,6 +13,7 @@ import { SkinPicker } from './SkinPicker'
 export function App() {
   const game = useGame()
   const [skin, setSkin] = useSkin()
+  const [historyVisible, toggleHistory] = useHistoryPanel()
   const turn = game.position.turn === 'white' ? 'White' : 'Black'
   const checkedColor = isKingInCheck(game.position, game.position.turn) ? game.position.turn : null
   const level = DIFFICULTY_LABELS[game.difficulty]
@@ -33,7 +35,7 @@ export function App() {
   }
   return (
     <SkinContext value={skin}>
-      <main className="app-shell" inert={game.pendingPromotion || !game.resumed ? true : undefined}>
+      <main className={`app-shell${historyVisible ? '' : ' app-shell--no-history'}`} inert={game.pendingPromotion || !game.resumed ? true : undefined}>
         <header className="masthead">
           <div>
             <p className="eyebrow">Over the board</p>
@@ -76,7 +78,7 @@ export function App() {
               <h2>{heading}</h2>
               <div className="game-note__rule" />
             </div>
-            <MoveList moves={game.moves} />
+            {historyVisible && <MoveList moves={game.moves} />}
             <button type="button" className="undo-button" disabled={!game.canUndo} onClick={game.undo}>Undo</button>
           </aside>
         </section>
@@ -84,6 +86,14 @@ export function App() {
         <footer>
           <span>{game.mode === 'local' ? 'Two players · Full rules' : `Human vs machine · ${level}`}</span>
           <SkinPicker skin={skin} onChange={setSkin} />
+          <button
+            type="button"
+            className={`footer-button${historyVisible ? ' footer-button--selected' : ''}`}
+            aria-pressed={historyVisible}
+            onClick={toggleHistory}
+          >
+            Move history
+          </button>
           <button type="button" className="footer-button" onClick={() => game.startNewGame()}>New game</button>
         </footer>
       </main>
