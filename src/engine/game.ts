@@ -14,6 +14,11 @@ function disableRookRight(castling: CastlingRights, square: number): void {
   if (right) castling[right] = false
 }
 
+export function castlingRookSquare(position: Position, move: Move): number | null {
+  if (position.board[move.from]?.type !== 'king' || Math.abs(move.to - move.from) !== 2) return null
+  return move.to > move.from ? move.from + 3 : move.from - 4
+}
+
 function applyMoveUnchecked(position: Position, move: Move, trackHistory: boolean): Position {
   const piece = position.board[move.from]
   if (!piece) return position
@@ -25,11 +30,9 @@ function applyMoveUnchecked(position: Position, move: Move, trackHistory: boolea
   const isEnPassant = piece.type === 'pawn' && move.to === position.enPassantTarget && capturedPiece === null
   if (isEnPassant) board[move.to + (piece.color === 'white' ? 8 : -8)] = null
 
-  const isCastle = piece.type === 'king' && Math.abs(move.to - move.from) === 2
-  if (isCastle) {
-    const kingSide = move.to > move.from
-    const rookFrom = kingSide ? move.from + 3 : move.from - 4
-    const rookTo = kingSide ? move.from + 1 : move.from - 1
+  const rookFrom = castlingRookSquare(position, move)
+  if (rookFrom !== null) {
+    const rookTo = (move.from + move.to) / 2
     board[rookTo] = board[rookFrom]
     board[rookFrom] = null
   }

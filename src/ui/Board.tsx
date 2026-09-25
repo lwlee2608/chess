@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
+import { castlingRookSquare } from '../engine/game'
 import type { Move, Position } from '../engine/types'
 import { FILES, indexToSquare } from '../engine/types'
 import { ChessPiece } from './pieces'
@@ -55,6 +56,7 @@ export function Board({
     x: number
     y: number
     wasSelected: boolean
+    castlingRook: boolean
   } | null>(null)
   const dragNode = useRef<HTMLElement | null>(null)
   const pendingDrop = useRef<Move | null | undefined>(undefined)
@@ -109,7 +111,7 @@ export function Board({
 
     const distance = Math.hypot(event.clientX - start.x, event.clientY - start.y)
     if (distance < 8) {
-      if (start.wasSelected) onChooseSquare(start.square)
+      if (start.wasSelected || start.castlingRook) onChooseSquare(start.square)
       return
     }
 
@@ -160,16 +162,18 @@ export function Board({
               onPointerDown={(event) => {
                 if (!piece || piece.color !== position.turn) return
                 suppressNextClick.current = true
+                const castlingRook = legalMoves.some((move) => castlingRookSquare(position, move) === square)
                 pointerStart.current = {
                   id: event.pointerId,
                   square,
                   x: event.clientX,
                   y: event.clientY,
                   wasSelected: selectedSquare === square,
+                  castlingRook,
                 }
                 dragNode.current = event.currentTarget.querySelector<HTMLElement>('.piece-wrap')
                 event.currentTarget.setPointerCapture(event.pointerId)
-                if (selectedSquare !== square) onSelectSquare(square)
+                if (selectedSquare !== square && !castlingRook) onSelectSquare(square)
               }}
               onPointerMove={(event) => {
                 const start = pointerStart.current
@@ -177,6 +181,10 @@ export function Board({
                 const offsetX = event.clientX - start.x
                 const offsetY = event.clientY - start.y
                 if (Math.hypot(offsetX, offsetY) < 8) return
+                if (start.castlingRook) {
+                  start.castlingRook = false
+                  onSelectSquare(start.square)
+                }
                 setDraggingSquare(start.square)
                 dragNode.current?.style.setProperty('--drag-x', `${offsetX}px`)
                 dragNode.current?.style.setProperty('--drag-y', `${offsetY}px`)
