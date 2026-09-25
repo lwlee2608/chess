@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Difficulty, SearchRequest } from '../ai/search'
 import { createStartingPosition } from '../engine/board'
-import { applyMove, getGameStatus, getLegalMoves, hasMatingMaterial } from '../engine/game'
+import { applyMove, castlingRookSquare, getGameStatus, getLegalMoves, hasMatingMaterial } from '../engine/game'
 import { toSan } from '../engine/san'
 import type { Color, GameStatus, Move, Position, PromotionPiece } from '../engine/types'
 import { opposite } from '../engine/types'
@@ -128,7 +128,7 @@ export function useGame() {
 
   const moveTo = (target: number): boolean => {
     if (inputBlocked) return false
-    const candidates = legalMoves.filter(({ to }) => to === target)
+    const candidates = legalMoves.filter((move) => move.to === target || castlingRookSquare(position, move) === target)
     if (candidates.length === 0) return false
     if (candidates.length > 1 && candidates.every((move) => move.promotion)) {
       setPendingPromotion(candidates)

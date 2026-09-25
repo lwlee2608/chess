@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createStartingPosition } from './board'
-import { applyMove, getGameStatus, getLegalMoves, hasInsufficientMaterial } from './game'
+import { applyMove, castlingRookSquare, getGameStatus, getLegalMoves, hasInsufficientMaterial } from './game'
 import type { CastlingRights, Piece, Position, PromotionPiece } from './types'
 import { squareToIndex } from './types'
 
@@ -52,6 +52,21 @@ describe('complete chess rules', () => {
     const castled = play(position, 'e1', 'g1')
     expect(castled.board[squareToIndex('g1')]).toEqual({ color: 'white', type: 'king' })
     expect(castled.board[squareToIndex('f1')]).toEqual({ color: 'white', type: 'rook' })
+  })
+
+  it('castles queen side and maps the rook square to the castling move', () => {
+    const position = positionWith({
+      e1: { color: 'white', type: 'king' },
+      a1: { color: 'white', type: 'rook' },
+      e8: { color: 'black', type: 'king' },
+    })
+    position.castling.whiteQueenSide = true
+    const castle = getLegalMoves(position, squareToIndex('e1')).find((move) => move.to === squareToIndex('c1'))
+    expect(castle && castlingRookSquare(position, castle)).toBe(squareToIndex('a1'))
+    const castled = play(position, 'e1', 'c1')
+    expect(castled.board[squareToIndex('c1')]).toEqual({ color: 'white', type: 'king' })
+    expect(castled.board[squareToIndex('d1')]).toEqual({ color: 'white', type: 'rook' })
+    expect(castled.board[squareToIndex('a1')]).toBeNull()
   })
 
   it('captures en passant', () => {
