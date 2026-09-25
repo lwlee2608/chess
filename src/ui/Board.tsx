@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { castlingRookSquare } from '../engine/game'
 import type { Move, Position } from '../engine/types'
@@ -59,42 +59,37 @@ export function Board({
     castlingRook: boolean
   } | null>(null)
   const dragNode = useRef<HTMLElement | null>(null)
-  const pendingDrop = useRef<Move | null | undefined>(undefined)
-  const droppedMove = useRef<Move | null>(null)
+  const [pendingDrop, setPendingDrop] = useState<Move | null | undefined>(undefined)
   const suppressNextClick = useRef(false)
-  const [activeAnimations, setActiveAnimations] = useState<Map<number, ActiveAnimation>>(() => new Map())
-  const animatedMove = useRef<Move | null>(null)
-  const nextAnimationId = useRef(0)
+  const [animationState, setAnimationState] = useState<{
+    move: Move | null
+    animations: Map<number, ActiveAnimation>
+    nextId: number
+  }>(() => ({ move: null, animations: new Map(), nextId: 0 }))
   const legalTargets = new Set(legalMoves.map(({ to }) => to))
   const flip = orientation === 'white' ? 1 : -1
 
-  if (pendingDrop.current !== undefined && animateMove !== pendingDrop.current) {
-    droppedMove.current = animateMove
-    pendingDrop.current = undefined
+  if (animateMove !== animationState.move) {
+    const dropped = pendingDrop !== undefined && animateMove !== pendingDrop
+    let animations = new Map<number, ActiveAnimation>()
+    let nextId = animationState.nextId
+    if (animateMove) {
+      if (dropped) {
+        animations = animationState.animations
+      } else {
+        animationState.animations.forEach((animation, to) => {
+          if (position.board[to] !== null) animations.set(to, animation)
+        })
+        slideOrigins(position, animateMove).forEach((from, to) => {
+          animations.set(to, { from, id: nextId++ })
+        })
+      }
+    }
+    if (dropped) setPendingDrop(undefined)
+    setAnimationState({ move: animateMove, animations, nextId })
   }
 
-  useLayoutEffect(() => {
-    if (animateMove === animatedMove.current) return
-    animatedMove.current = animateMove
-    if (!animateMove) {
-      setActiveAnimations(new Map())
-      return
-    }
-    if (animateMove === droppedMove.current) return
-    const incoming = slideOrigins(position, animateMove)
-    setActiveAnimations((current) => {
-      const next = new Map<number, ActiveAnimation>()
-      current.forEach((animation, to) => {
-        if (position.board[to] !== null) next.set(to, animation)
-      })
-      incoming.forEach((from, to) => {
-        next.set(to, { from, id: nextAnimationId.current++ })
-      })
-      return next
-    })
-  }, [animateMove, position])
-
-  const animations = activeAnimations
+  const animations = animationState.animations
 
   const releaseDrag = () => {
     dragNode.current?.style.removeProperty('--drag-x')
@@ -117,7 +112,7 @@ export function Board({
 
     const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-square]')
     const targetSquare = Number(target?.dataset.square)
-    if (Number.isInteger(targetSquare) && onMoveTo(targetSquare)) pendingDrop.current = animateMove
+    if (Number.isInteger(targetSquare) && onMoveTo(targetSquare)) setPendingDrop(animateMove)
   }
 
   return (
@@ -201,11 +196,11 @@ export function Board({
                   key={animation?.id}
                   onAnimationEnd={(event) => {
                     if (event.animationName !== 'piece-slide' || animation === undefined) return
-                    setActiveAnimations((current) => {
-                      if (current.get(square)?.id !== animation.id) return current
-                      const next = new Map(current)
-                      next.delete(square)
-                      return next
+                    setAnimationState((current) => {
+                      if (current.animations.get(square)?.id !== animation.id) return current
+                      const animations = new Map(current.animations)
+                      animations.delete(square)
+                      return { ...current, animations }
                     })
                   }}
                 >
