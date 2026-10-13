@@ -456,7 +456,8 @@ h1 {
   box-shadow: 0 0 22px rgba(var(--gold-rgb), 0.55);
   animation: gm-sheen 3.2s ease-in-out infinite;
 }
-.level-note { flex-basis: 100%; margin: 4px 0 0; color: var(--gold); font-size: 0.64rem; letter-spacing: 0.04em; }
+.level-note { flex-basis: 100%; margin: 4px 0 0; color: var(--muted); font-size: 0.64rem; letter-spacing: 0.04em; }
+.level-note--grandmaster { color: var(--gold); }
 
 @keyframes gm-sheen {
   0%, 60% { background-position: 100% 0; }

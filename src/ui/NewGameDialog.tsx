@@ -15,6 +15,14 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   grandmaster: 'Grandmaster',
 }
 
+const DIFFICULTY_NOTES: Record<Difficulty, string> = {
+  rookie: 'Just learned how the horse moves. Be gentle.',
+  casual: 'Plays for fun. Might spot your trap, might not.',
+  club: 'Thursday-night regular. Gives nothing away for free.',
+  master: 'Calculates deep. Every slip gets punished.',
+  grandmaster: 'Stockfish at full strength. Expect no mercy.',
+}
+
 interface NewGameDialogProps {
   onChoose: (mode: GameMode, timeControl: TimeControl, difficulty: Difficulty) => void
   resumeAvailable: boolean
@@ -70,7 +78,7 @@ export function NewGameDialog({ onChoose, resumeAvailable, onResume }: NewGameDi
               {DIFFICULTY_LABELS[level]}
             </button>
           ))}
-          {difficulty === 'grandmaster' && <p className="level-note">Stockfish at full strength. Expect no mercy.</p>}
+          <p className={`level-note level-note--${difficulty}`}>{DIFFICULTY_NOTES[difficulty]}</p>
         </fieldset>
         <div className="mode-options">
           <button type="button" onClick={() => onChoose('ai-white', timeControl, difficulty)}>
