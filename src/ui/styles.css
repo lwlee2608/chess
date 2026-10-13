@@ -438,6 +438,8 @@ h1 {
 .mode-options strong, .mode-options > button > span { display: block; }
 .time-controls {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   gap: 7px;
   margin: -18px 0 28px;
   padding: 0;
@@ -447,6 +449,20 @@ h1 {
 .time-controls legend { margin-bottom: 8px; color: var(--muted-2); text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.1em; }
 .time-controls button { border: 1px solid rgba(var(--line-rgb), 0.24); padding: 8px 12px; color: var(--cream); background: transparent; cursor: pointer; }
 .time-controls .time-control--selected { border-color: var(--rust); background: var(--rust); }
+.time-controls .level--grandmaster { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 14px rgba(var(--gold-rgb), 0.25); }
+.time-controls .level--grandmaster.time-control--selected {
+  color: var(--ink);
+  background: linear-gradient(110deg, var(--gold) 40%, rgba(255, 255, 255, 0.55) 50%, var(--gold) 60%) 100% 0 / 250% 100% border-box;
+  box-shadow: 0 0 22px rgba(var(--gold-rgb), 0.55);
+  animation: gm-sheen 3.2s ease-in-out infinite;
+}
+.level-note { flex-basis: 100%; margin: 4px 0 0; color: var(--muted); font-size: 0.64rem; letter-spacing: 0.04em; }
+.level-note--grandmaster { color: var(--gold); }
+
+@keyframes gm-sheen {
+  0%, 60% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
 .mode-options strong { margin: 10px 0 6px; font-family: var(--font-display); font-size: 1.25rem; }
 .mode-options > button > span { color: var(--muted); font-size: 0.64rem; }
 .local-kings { display: flex !important; justify-content: center; align-items: center; height: 96px; }
@@ -551,6 +567,7 @@ footer { border-top: 1px solid rgba(var(--line-rgb), 0.28); border-bottom: 0; pa
   .piece-wrap--slide,
   .target-marker,
   .square--last::after,
-  .square--check { animation: none; }
+  .square--check,
+  .level--grandmaster { animation: none; }
   .square--captured::before { content: none; }
 }

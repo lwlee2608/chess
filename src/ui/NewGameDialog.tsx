@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { Difficulty } from '../ai/search'
-import { DIFFICULTIES } from '../ai/search'
+import type { Difficulty } from '../ai/difficulty'
+import { DIFFICULTIES } from '../ai/difficulty'
 import type { Color } from '../engine/types'
 import type { TimeControl } from '../state/useClock'
 import { ChessPiece } from './pieces'
@@ -12,6 +12,15 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   casual: 'Casual',
   club: 'Club',
   master: 'Master',
+  grandmaster: 'Grandmaster',
+}
+
+const DIFFICULTY_NOTES: Record<Difficulty, string> = {
+  rookie: 'Just learned how the horse moves. Be gentle.',
+  casual: 'Plays for fun. Might spot your trap, might not.',
+  club: 'Thursday-night regular. Gives nothing away for free.',
+  master: 'Calculates deep. Every slip gets punished.',
+  grandmaster: 'Stockfish at full strength. Expect no mercy.',
 }
 
 interface NewGameDialogProps {
@@ -59,13 +68,17 @@ export function NewGameDialog({ onChoose, resumeAvailable, onResume }: NewGameDi
           {DIFFICULTIES.map((level) => (
             <button
               type="button"
-              className={difficulty === level ? 'time-control--selected' : ''}
+              className={[
+                difficulty === level ? 'time-control--selected' : '',
+                level === 'grandmaster' ? 'level--grandmaster' : '',
+              ].join(' ')}
               key={level}
               onClick={() => setDifficulty(level)}
             >
               {DIFFICULTY_LABELS[level]}
             </button>
           ))}
+          <p className={`level-note level-note--${difficulty}`}>{DIFFICULTY_NOTES[difficulty]}</p>
         </fieldset>
         <div className="mode-options">
           <button type="button" onClick={() => onChoose('ai-white', timeControl, difficulty)}>

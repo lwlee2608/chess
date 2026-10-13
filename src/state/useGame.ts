@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Difficulty, SearchRequest } from '../ai/search'
+import type { Difficulty } from '../ai/difficulty'
+import { requestMove } from '../ai/engine'
 import { createStartingPosition } from '../engine/board'
 import { applyMove, castlingRookSquare, getGameStatus, getLegalMoves, hasMatingMaterial } from '../engine/game'
 import { toSan } from '../engine/san'
@@ -37,7 +38,7 @@ export function useGame() {
   const [resumeAvailable, setResumeAvailable] = useState(initial !== null)
   const [resumed, setResumed] = useState(false)
   const [searchFailed, setSearchFailed] = useState(false)
-  const workerRef = useRef<Worker | null>(null)
+  const cancelSearch = useRef<(() => void) | null>(null)
   const savedAtLoad = useRef(initial)
   const searchGeneration = useRef(0)
   const engineStatus = useMemo(() => getGameStatus(position), [position])
@@ -75,29 +76,28 @@ export function useGame() {
     setJustMoved(move)
   }, [completeMove, position])
 
-  useEffect(() => () => workerRef.current?.terminate(), [])
+  useEffect(() => () => cancelSearch.current?.(), [])
 
   useEffect(() => {
     if (!computerTurn) return
     const generation = ++searchGeneration.current
     const startSearch = () => {
-      const worker = new Worker(new URL('../ai/worker.ts', import.meta.url), { type: 'module' })
-      workerRef.current?.terminate()
-      workerRef.current = worker
-      worker.onmessage = (event: MessageEvent<Move | null>) => {
-        if (generation !== searchGeneration.current || !event.data) return
-        commitMove(event.data)
-      }
-      worker.onerror = () => {
-        if (generation === searchGeneration.current) setSearchFailed(true)
-      }
-      worker.postMessage({ position, difficulty } satisfies SearchRequest)
+      cancelSearch.current?.()
+      cancelSearch.current = requestMove(
+        { position, moves: history.map(({ move }) => move), difficulty },
+        (move) => {
+          if (generation === searchGeneration.current && move) commitMove(move)
+        },
+        () => {
+          if (generation === searchGeneration.current) setSearchFailed(true)
+        },
+      )
     }
     const humanJustMoved = history.at(-1)?.position.turn === humanColor
     const timer = window.setTimeout(startSearch, humanJustMoved ? AI_MOVE_DELAY_MS : 0)
     return () => {
       window.clearTimeout(timer)
-      workerRef.current?.terminate()
+      cancelSearch.current?.()
     }
   }, [commitMove, computerTurn, difficulty, history, humanColor, position])
 
@@ -158,7 +158,7 @@ export function useGame() {
 
   const startNewGame = (nextMode?: GameMode, nextTimeControl: TimeControl = 'off', nextDifficulty: Difficulty = 'club') => {
     searchGeneration.current += 1
-    workerRef.current?.terminate()
+    cancelSearch.current?.()
     clearSavedGame()
     savedAtLoad.current = null
     setPosition(createStartingPosition())
@@ -205,7 +205,7 @@ export function useGame() {
     const restoreIndex = mode === 'local' ? history.length - 1 : aiRestoreIndex
     if (restoreIndex < 0) return
     searchGeneration.current += 1
-    workerRef.current?.terminate()
+    cancelSearch.current?.()
     setSearchFailed(false)
     setPosition(history[restoreIndex].position)
     restoreClock(history[restoreIndex].clock)

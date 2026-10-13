@@ -1,5 +1,5 @@
-import type { Difficulty } from '../ai/search'
-import { DIFFICULTIES } from '../ai/search'
+import type { Difficulty } from '../ai/difficulty'
+import { DIFFICULTIES } from '../ai/difficulty'
 import type { Move, Piece, Position } from '../engine/types'
 import type { ClockState, TimeControl } from './useClock'
 import type { GameMode } from '../ui/NewGameDialog'

@@ -1,19 +1,18 @@
 import { applyMove, getAllLegalMoves, getGameStatus } from '../engine/game'
 import type { Color, Move, Position } from '../engine/types'
+import type { Difficulty } from './difficulty'
 import { MATERIAL, evaluate } from './evaluate'
 
-export type Difficulty = 'rookie' | 'casual' | 'club' | 'master'
-
-export const DIFFICULTIES: readonly Difficulty[] = ['rookie', 'casual', 'club', 'master']
+export type SearchDifficulty = Exclude<Difficulty, 'grandmaster'>
 
 const MATE_SCORE = 1_000_000
-const DEPTH: Record<Difficulty, number> = { rookie: 1, casual: 2, club: 3, master: 4 }
+const DEPTH: Record<SearchDifficulty, number> = { rookie: 1, casual: 2, club: 3, master: 4 }
 const CASUAL_SLACK = 120
 const ROOKIE_CHOICES = 5
 
 export interface SearchRequest {
   position: Position
-  difficulty: Difficulty
+  difficulty: SearchDifficulty
 }
 
 interface ScoredMove {
@@ -72,7 +71,7 @@ function pickRookie(scored: ScoredMove[]): Move {
   return pickRandom([...pool].sort((a, b) => a.score - b.score).slice(0, ROOKIE_CHOICES))
 }
 
-export function findBestMove(position: Position, difficulty: Difficulty = 'club'): Move | null {
+export function findBestMove(position: Position, difficulty: SearchDifficulty = 'club'): Move | null {
   const moves = ordered(position, getAllLegalMoves(position))
   if (moves.length === 0) return null
 
