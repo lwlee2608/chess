@@ -438,6 +438,8 @@ h1 {
 .mode-options strong, .mode-options > button > span { display: block; }
 .time-controls {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   gap: 7px;
   margin: -18px 0 28px;
   padding: 0;
