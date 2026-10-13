@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { Difficulty } from '../ai/search'
-import { DIFFICULTIES } from '../ai/search'
+import type { Difficulty } from '../ai/difficulty'
+import { DIFFICULTIES } from '../ai/difficulty'
 import type { Color } from '../engine/types'
 import type { TimeControl } from '../state/useClock'
 import { ChessPiece } from './pieces'
@@ -12,6 +12,7 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   casual: 'Casual',
   club: 'Club',
   master: 'Master',
+  grandmaster: 'Grandmaster',
 }
 
 interface NewGameDialogProps {
