@@ -60,13 +60,17 @@ export function NewGameDialog({ onChoose, resumeAvailable, onResume }: NewGameDi
           {DIFFICULTIES.map((level) => (
             <button
               type="button"
-              className={difficulty === level ? 'time-control--selected' : ''}
+              className={[
+                difficulty === level ? 'time-control--selected' : '',
+                level === 'grandmaster' ? 'level--grandmaster' : '',
+              ].join(' ')}
               key={level}
               onClick={() => setDifficulty(level)}
             >
               {DIFFICULTY_LABELS[level]}
             </button>
           ))}
+          {difficulty === 'grandmaster' && <p className="level-note">Stockfish at full strength. Expect no mercy.</p>}
         </fieldset>
         <div className="mode-options">
           <button type="button" onClick={() => onChoose('ai-white', timeControl, difficulty)}>
