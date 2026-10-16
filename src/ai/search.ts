@@ -115,6 +115,7 @@ function minimax(
   let moves = getCandidateMoves(position)
 
   if (quiescent) {
+    if (!moves.some((move) => !isKingInCheck(applyMoveUnchecked(position, move, false), position.turn))) return 0
     best = evaluate(position, perspective)
     if (depth <= -QUIESCENCE_DEPTH) return best
     if (maximizing) alpha = Math.max(alpha, best)
