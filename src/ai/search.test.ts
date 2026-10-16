@@ -67,6 +67,19 @@ describe('findBestMove', () => {
     })
   })
 
+  it('scores a stalemating capture beyond the Club horizon as a draw', () => {
+    const position = positionWith({
+      g5: { color: 'white', type: 'king' },
+      c6: { color: 'white', type: 'queen' },
+      h7: { color: 'black', type: 'king' },
+      f4: { color: 'black', type: 'pawn' },
+    }, 'white')
+    expect(findBestMove(position, 'club', 0)).toMatchObject({
+      from: squareToIndex('g5'),
+      to: squareToIndex('f4'),
+    })
+  })
+
   it('finds checkmate at Master level', () => {
     const position = positionWith({
       f6: { color: 'white', type: 'king' },
