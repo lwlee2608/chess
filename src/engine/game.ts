@@ -19,7 +19,8 @@ export function castlingRookSquare(position: Position, move: Move): number | nul
   return move.to > move.from ? move.from + 3 : move.from - 4
 }
 
-function applyMoveUnchecked(position: Position, move: Move, trackHistory: boolean): Position {
+// Skips legality checks: search applies pseudo-legal moves and rejects results that leave the king in check.
+export function applyMoveUnchecked(position: Position, move: Move, trackHistory = true): Position {
   const piece = position.board[move.from]
   if (!piece) return position
 
@@ -53,13 +54,16 @@ function applyMoveUnchecked(position: Position, move: Move, trackHistory: boolea
   if (capturedPiece?.type === 'rook') disableRookRight(castling, move.to)
 
   const isPawnDoubleMove = piece.type === 'pawn' && Math.abs(move.to - move.from) === 16
+  const isIrreversible = piece.type === 'pawn' || capturedPiece !== null
   const next: Position = {
     board,
     turn: opposite(position.turn),
     castling,
     enPassantTarget: isPawnDoubleMove ? (move.from + move.to) / 2 : null,
-    halfmoveClock: piece.type === 'pawn' || capturedPiece || isEnPassant ? 0 : position.halfmoveClock + 1,
-    positionHistory: trackHistory ? [...position.positionHistory, positionKey(position)] : position.positionHistory,
+    halfmoveClock: isIrreversible ? 0 : position.halfmoveClock + 1,
+    positionHistory: !trackHistory
+      ? position.positionHistory
+      : isIrreversible ? [] : [...position.positionHistory, positionKey(position)],
   }
 
   return next
@@ -102,34 +106,45 @@ function addCastlingMoves(position: Position, from: number, moves: Move[]): void
   }
 }
 
-export function getLegalMoves(position: Position, from: number): Move[] {
-  const piece = position.board[from]
-  if (!piece || piece.color !== position.turn) return []
-
+function getCandidateMovesFrom(position: Position, from: number): Move[] {
+  if (position.board[from]?.color !== position.turn) return []
   const candidates = getPseudoLegalMoves(position, from)
   addCastlingMoves(position, from, candidates)
+  return candidates
+}
 
-  return candidates.filter((move) => !isKingInCheck(applyMoveUnchecked(position, move, false), piece.color))
+function isLegalAfter(position: Position, next: Position): boolean {
+  return !isKingInCheck(next, position.turn)
+}
+
+export function getLegalMoves(position: Position, from: number): Move[] {
+  return getCandidateMovesFrom(position, from)
+    .filter((move) => isLegalAfter(position, applyMoveUnchecked(position, move, false)))
+}
+
+export function getCandidateMoves(position: Position): Move[] {
+  const moves: Move[] = []
+  for (let from = 0; from < 64; from += 1) moves.push(...getCandidateMovesFrom(position, from))
+  return moves
 }
 
 export function getAllLegalMoves(position: Position): Move[] {
-  const moves: Move[] = []
-  for (let from = 0; from < 64; from += 1) {
-    if (position.board[from]?.color === position.turn) moves.push(...getLegalMoves(position, from))
-  }
-  return moves
+  return getCandidateMoves(position)
+    .filter((move) => isLegalAfter(position, applyMoveUnchecked(position, move, false)))
 }
 
 export function applyMove(position: Position, move: Move): Position {
   const legal = getLegalMoves(position, move.from).some(
     (candidate) => candidate.to === move.to && candidate.promotion === move.promotion,
   )
-  return legal ? applyMoveUnchecked(position, move, true) : position
+  return legal ? applyMoveUnchecked(position, move) : position
 }
+
+const PIECE_CODES = { king: 'k', queen: 'q', rook: 'r', bishop: 'b', knight: 'n', pawn: 'p' } as const
 
 function pieceCode(piece: Piece | null): string {
   if (!piece) return '.'
-  const code = { king: 'k', queen: 'q', rook: 'r', bishop: 'b', knight: 'n', pawn: 'p' }[piece.type]
+  const code = PIECE_CODES[piece.type]
   return piece.color === 'white' ? code.toUpperCase() : code
 }
 
@@ -159,21 +174,29 @@ export function positionKey(position: Position): string {
     position.castling.blackQueenSide ? 'q' : '',
   ].join('') || '-'
   const enPassant = hasEffectiveEnPassant(position) ? String(position.enPassantTarget) : '-'
-  return `${position.board.map(pieceCode).join('')} ${position.turn} ${rights} ${enPassant}`
+  let board = ''
+  for (const piece of position.board) board += pieceCode(piece)
+  return `${board} ${position.turn} ${rights} ${enPassant}`
 }
 
 export function hasInsufficientMaterial(board: Board): boolean {
-  const pieces = board
-    .map((piece, square) => ({ piece, square }))
-    .filter((entry): entry is { piece: Piece; square: number } => entry.piece !== null && entry.piece.type !== 'king')
+  const minors: number[] = []
+  let hasKnight = false
+  for (let square = 0; square < 64; square += 1) {
+    const piece = board[square]
+    if (!piece || piece.type === 'king') continue
+    if (piece.type !== 'bishop' && piece.type !== 'knight') return false
+    if (piece.type === 'knight') hasKnight = true
+    minors.push(square)
+  }
 
-  if (pieces.length === 0) return true
-  if (pieces.length === 1) return pieces[0].piece.type === 'bishop' || pieces[0].piece.type === 'knight'
-  if (pieces.some(({ piece }) => piece.type !== 'bishop')) return false
+  if (minors.length <= 1) return true
+  if (hasKnight) return false
 
-  const squareColors = pieces.map(({ square }) => (Math.floor(square / 8) + square % 8) % 2)
-  return squareColors.every((color) => color === squareColors[0])
+  const squareColor = (square: number) => (Math.floor(square / 8) + square % 8) % 2
+  return minors.every((square) => squareColor(square) === squareColor(minors[0]))
 }
+
 export function hasMatingMaterial(board: Board, color: Color): boolean {
   const pieces = board.filter((piece) => piece?.color === color && piece.type !== 'king') as Piece[]
   if (pieces.some((piece) => piece.type === 'pawn' || piece.type === 'rook' || piece.type === 'queen')) return true
@@ -190,12 +213,18 @@ export function getGameStatus(position: Position): GameStatus {
       : { type: 'stalemate' }
   }
 
+  return getDrawStatus(position) ?? { type: 'playing' }
+}
+
+export function getDrawStatus(position: Position): GameStatus | null {
   if (position.halfmoveClock >= 100) return { type: 'draw', reason: 'fifty-move rule' }
-
-  const key = positionKey(position)
-  const repetitions = position.positionHistory.filter((entry) => entry === key).length + 1
-  if (repetitions >= 3) return { type: 'draw', reason: 'threefold repetition' }
+  if (isThreefoldRepetition(position)) return { type: 'draw', reason: 'threefold repetition' }
   if (hasInsufficientMaterial(position.board)) return { type: 'draw', reason: 'insufficient material' }
+  return null
+}
 
-  return { type: 'playing' }
+function isThreefoldRepetition(position: Position): boolean {
+  if (position.positionHistory.length < 8) return false
+  const key = positionKey(position)
+  return position.positionHistory.filter((entry) => entry === key).length >= 2
 }

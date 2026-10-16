@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createStartingPosition } from './board'
-import { applyMove, castlingRookSquare, getGameStatus, getLegalMoves, hasInsufficientMaterial } from './game'
+import { applyMoveUnchecked, applyMove, castlingRookSquare, getAllLegalMoves, getGameStatus, getLegalMoves, hasInsufficientMaterial } from './game'
 import type { CastlingRights, Piece, Position, PromotionPiece } from './types'
 import { squareToIndex } from './types'
 
@@ -22,6 +22,30 @@ function play(position: Position, from: string, to: string, promotion?: Promotio
 }
 
 describe('complete chess rules', () => {
+  it('preserves repetition history when applying generated search moves', () => {
+    let position = createStartingPosition()
+    for (let repeat = 0; repeat < 2; repeat += 1) {
+      for (const [from, to] of [['g1', 'f3'], ['g8', 'f6'], ['f3', 'g1'], ['f6', 'g8']]) {
+        const move = getAllLegalMoves(position).find((candidate) => (
+          candidate.from === squareToIndex(from) && candidate.to === squareToIndex(to)
+        ))!
+        const next = applyMoveUnchecked(position, move)
+        expect(next).toEqual(applyMove(position, move))
+        position = next
+      }
+    }
+    expect(getGameStatus(position)).toEqual({
+      type: 'draw', reason: 'threefold repetition',
+    })
+  })
+
+  it('clears repetition history after an irreversible move', () => {
+    let position = play(createStartingPosition(), 'g1', 'f3')
+    expect(position.positionHistory).toHaveLength(1)
+    position = play(position, 'e7', 'e5')
+    expect(position.positionHistory).toEqual([])
+  })
+
   it('detects Fool’s Mate', () => {
     let position = createStartingPosition()
     position = play(position, 'f2', 'f3')
