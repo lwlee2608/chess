@@ -19,7 +19,8 @@ export function castlingRookSquare(position: Position, move: Move): number | nul
   return move.to > move.from ? move.from + 3 : move.from - 4
 }
 
-function applyMoveUnchecked(position: Position, move: Move, trackHistory: boolean): Position {
+// The caller must supply a legal move. Search avoids validating generated moves twice.
+export function applyLegalMove(position: Position, move: Move, trackHistory = true): Position {
   const piece = position.board[move.from]
   if (!piece) return position
 
@@ -109,7 +110,7 @@ export function getLegalMoves(position: Position, from: number): Move[] {
   const candidates = getPseudoLegalMoves(position, from)
   addCastlingMoves(position, from, candidates)
 
-  return candidates.filter((move) => !isKingInCheck(applyMoveUnchecked(position, move, false), piece.color))
+  return candidates.filter((move) => !isKingInCheck(applyLegalMove(position, move, false), piece.color))
 }
 
 export function getAllLegalMoves(position: Position): Move[] {
@@ -124,7 +125,7 @@ export function applyMove(position: Position, move: Move): Position {
   const legal = getLegalMoves(position, move.from).some(
     (candidate) => candidate.to === move.to && candidate.promotion === move.promotion,
   )
-  return legal ? applyMoveUnchecked(position, move, true) : position
+  return legal ? applyLegalMove(position, move) : position
 }
 
 function pieceCode(piece: Piece | null): string {
@@ -146,7 +147,7 @@ function hasEffectiveEnPassant(position: Position): boolean {
     const pawn = position.board[from]
     if (pawn?.color !== position.turn || pawn.type !== 'pawn') continue
     const candidate = { from, to: target }
-    if (!isKingInCheck(applyMoveUnchecked(position, candidate, false), position.turn)) return true
+    if (!isKingInCheck(applyLegalMove(position, candidate, false), position.turn)) return true
   }
   return false
 }
@@ -182,8 +183,7 @@ export function hasMatingMaterial(board: Board, color: Color): boolean {
   return bishops >= 2 || (bishops >= 1 && knights >= 1) || knights >= 2
 }
 
-export function getGameStatus(position: Position): GameStatus {
-  const legalMoves = getAllLegalMoves(position)
+export function getGameStatus(position: Position, legalMoves = getAllLegalMoves(position)): GameStatus {
   if (legalMoves.length === 0) {
     return isKingInCheck(position, position.turn)
       ? { type: 'checkmate', winner: opposite(position.turn) }

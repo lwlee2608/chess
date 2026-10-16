@@ -1,4 +1,4 @@
-import { applyMove, getAllLegalMoves, getGameStatus } from '../engine/game'
+import { applyLegalMove, getAllLegalMoves, getGameStatus } from '../engine/game'
 import { isKingInCheck } from '../engine/moves'
 import type { Color, Move, Position } from '../engine/types'
 import type { Difficulty } from './difficulty'
@@ -47,12 +47,12 @@ function minimax(
   perspective: Color,
   extendTactics: boolean,
 ): number {
-  const status = getGameStatus(position)
+  let moves = getAllLegalMoves(position)
+  const status = getGameStatus(position, moves)
   if (status.type === 'checkmate') return status.winner === perspective ? MATE_SCORE + depth : -MATE_SCORE - depth
   if (status.type !== 'playing') return 0
   const maximizing = position.turn === perspective
   let best = maximizing ? -Infinity : Infinity
-  let moves = getAllLegalMoves(position)
 
   if (depth <= 0) {
     if (!extendTactics) return evaluate(position, perspective)
@@ -68,7 +68,7 @@ function minimax(
   }
 
   for (const move of ordered(position, moves)) {
-    const score = minimax(applyMove(position, move), depth - 1, alpha, beta, perspective, extendTactics)
+    const score = minimax(applyLegalMove(position, move), depth - 1, alpha, beta, perspective, extendTactics)
     if (maximizing) {
       best = Math.max(best, score)
       alpha = Math.max(alpha, best)
@@ -98,7 +98,7 @@ export function findBestMove(position: Position, difficulty: SearchDifficulty = 
 
   const depth = DEPTH[difficulty]
   const scored = moves.map((move) => {
-    const next = applyMove(position, move)
+    const next = applyLegalMove(position, move)
     return { move, next, score: minimax(next, depth - 1, -Infinity, Infinity, position.turn, difficulty === 'club' || difficulty === 'master') }
   })
 
