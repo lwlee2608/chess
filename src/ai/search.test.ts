@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { createStartingPosition } from '../engine/board'
 import type { CastlingRights, Piece, Position } from '../engine/types'
 import { squareToIndex } from '../engine/types'
 import { applyMove, getGameStatus } from '../engine/game'
@@ -18,17 +19,33 @@ function positionWith(entries: Record<string, Piece>, turn: Position['turn']): P
 }
 
 describe('findBestMove', () => {
-  it('captures a hanging queen at club level', () => {
+  it.each(['club', 'master'] as const)('captures a hanging queen at %s level', (difficulty) => {
     const position = positionWith({
       a1: { color: 'white', type: 'king' },
       d4: { color: 'white', type: 'queen' },
       h8: { color: 'black', type: 'king' },
       d8: { color: 'black', type: 'rook' },
     }, 'black')
-    expect(findBestMove(position, 'club')).toMatchObject({
+    expect(findBestMove(position, difficulty)).toMatchObject({
       from: squareToIndex('d8'),
       to: squareToIndex('d4'),
     })
+  })
+
+  it('keeps both best opening moves without treating pruning bounds as ties', () => {
+    const random = vi.spyOn(Math, 'random')
+    try {
+      random.mockReturnValue(0)
+      expect(findBestMove(createStartingPosition(), 'master')).toEqual({
+        from: squareToIndex('b1'), to: squareToIndex('c3'),
+      })
+      random.mockReturnValue(0.999999)
+      expect(findBestMove(createStartingPosition(), 'master')).toEqual({
+        from: squareToIndex('g1'), to: squareToIndex('f3'),
+      })
+    } finally {
+      random.mockRestore()
+    }
   })
 
   it('resolves the pawn exchange beyond the Master horizon', () => {

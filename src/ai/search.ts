@@ -97,9 +97,25 @@ export function findBestMove(position: Position, difficulty: SearchDifficulty = 
   if (moves.length === 0) return null
 
   const depth = DEPTH[difficulty]
+  if (difficulty === 'club' || difficulty === 'master') {
+    let best = -Infinity
+    let candidates: Move[] = []
+    for (const move of moves) {
+      // Scores are integers. Keeping alpha below best makes tied scores exact.
+      const score = minimax(applyLegalMove(position, move), depth - 1, best - 1, Infinity, position.turn, true)
+      if (score > best) {
+        best = score
+        candidates = [move]
+      } else if (score === best) {
+        candidates.push(move)
+      }
+    }
+    return candidates[Math.floor(Math.random() * candidates.length)]
+  }
+
   const scored = moves.map((move) => {
     const next = applyLegalMove(position, move)
-    return { move, next, score: minimax(next, depth - 1, -Infinity, Infinity, position.turn, difficulty === 'club' || difficulty === 'master') }
+    return { move, next, score: minimax(next, depth - 1, -Infinity, Infinity, position.turn, false) }
   })
 
   if (difficulty === 'rookie') return pickRookie(scored)
