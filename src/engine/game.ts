@@ -205,7 +205,8 @@ export function hasMatingMaterial(board: Board, color: Color): boolean {
   return bishops >= 2 || (bishops >= 1 && knights >= 1) || knights >= 2
 }
 
-export function getGameStatus(position: Position, legalMoves = getAllLegalMoves(position)): GameStatus {
+export function getGameStatus(position: Position): GameStatus {
+  const legalMoves = getAllLegalMoves(position)
   if (legalMoves.length === 0) {
     return isKingInCheck(position, position.turn)
       ? { type: 'checkmate', winner: opposite(position.turn) }

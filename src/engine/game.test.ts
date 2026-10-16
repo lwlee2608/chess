@@ -34,7 +34,7 @@ describe('complete chess rules', () => {
         position = next
       }
     }
-    expect(getGameStatus(position, getAllLegalMoves(position))).toEqual({
+    expect(getGameStatus(position)).toEqual({
       type: 'draw', reason: 'threefold repetition',
     })
   })
