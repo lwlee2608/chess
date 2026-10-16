@@ -31,6 +31,32 @@ describe('findBestMove', () => {
     })
   })
 
+  it('resolves the pawn exchange beyond the Master horizon', () => {
+    const position = positionWith({
+      g1: { color: 'white', type: 'king' },
+      d1: { color: 'white', type: 'rook' },
+      d2: { color: 'white', type: 'rook' },
+      d4: { color: 'white', type: 'pawn' },
+      g8: { color: 'black', type: 'king' },
+      d8: { color: 'black', type: 'queen' },
+      e5: { color: 'black', type: 'pawn' },
+    }, 'white')
+    expect(findBestMove(position, 'master')).toMatchObject({
+      from: squareToIndex('d4'),
+      to: squareToIndex('e5'),
+    })
+  })
+
+  it('finds checkmate at Master level', () => {
+    const position = positionWith({
+      f6: { color: 'white', type: 'king' },
+      g6: { color: 'white', type: 'queen' },
+      h8: { color: 'black', type: 'king' },
+    }, 'white')
+    const move = findBestMove(position, 'master')!
+    expect(getGameStatus(applyMove(position, move))).toEqual({ type: 'checkmate', winner: 'white' })
+  })
+
   it('never finishes the game at rookie level while quiet moves remain', () => {
     const position = positionWith({
       a1: { color: 'white', type: 'king' },

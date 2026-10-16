@@ -1,4 +1,5 @@
 import { applyMove, getAllLegalMoves, getGameStatus } from '../engine/game'
+import { isKingInCheck } from '../engine/moves'
 import type { Color, Move, Position } from '../engine/types'
 import type { Difficulty } from './difficulty'
 import { MATERIAL, evaluate } from './evaluate'
@@ -9,6 +10,7 @@ const MATE_SCORE = 1_000_000
 const DEPTH: Record<SearchDifficulty, number> = { rookie: 1, casual: 2, club: 3, master: 4 }
 const CASUAL_SLACK = 120
 const ROOKIE_CHOICES = 5
+const QUIESCENCE_DEPTH = 8
 
 export interface SearchRequest {
   position: Position
@@ -21,10 +23,16 @@ interface ScoredMove {
   score: number
 }
 
+function isCapture(position: Position, move: Move): boolean {
+  return position.board[move.to] !== null
+    || (position.board[move.from]?.type === 'pawn' && move.to === position.enPassantTarget)
+}
+
 function captureValue(position: Position, move: Move): number {
   const victim = position.board[move.to]
-  if (!victim) return 0
-  return MATERIAL[victim.type] - MATERIAL[position.board[move.from]!.type] / 100
+  const captured = victim ? MATERIAL[victim.type] : isCapture(position, move) ? MATERIAL.pawn : 0
+  const promotion = move.promotion ? MATERIAL[move.promotion] - MATERIAL.pawn : 0
+  return captured + promotion - (captured ? MATERIAL[position.board[move.from]!.type] / 100 : 0)
 }
 
 function ordered(position: Position, moves: Move[]): Move[] {
@@ -37,17 +45,30 @@ function minimax(
   alpha: number,
   beta: number,
   perspective: Color,
+  extendTactics: boolean,
 ): number {
   const status = getGameStatus(position)
   if (status.type === 'checkmate') return status.winner === perspective ? MATE_SCORE + depth : -MATE_SCORE - depth
   if (status.type !== 'playing') return 0
-  if (depth === 0) return evaluate(position, perspective)
-
   const maximizing = position.turn === perspective
   let best = maximizing ? -Infinity : Infinity
+  let moves = getAllLegalMoves(position)
 
-  for (const move of ordered(position, getAllLegalMoves(position))) {
-    const score = minimax(applyMove(position, move), depth - 1, alpha, beta, perspective)
+  if (depth <= 0) {
+    if (!extendTactics) return evaluate(position, perspective)
+    const inCheck = isKingInCheck(position, position.turn)
+    if (!inCheck) {
+      best = evaluate(position, perspective)
+      if (depth <= -QUIESCENCE_DEPTH) return best
+      if (maximizing) alpha = Math.max(alpha, best)
+      else beta = Math.min(beta, best)
+      if (beta <= alpha) return best
+      moves = moves.filter((move) => isCapture(position, move) || move.promotion)
+    }
+  }
+
+  for (const move of ordered(position, moves)) {
+    const score = minimax(applyMove(position, move), depth - 1, alpha, beta, perspective, extendTactics)
     if (maximizing) {
       best = Math.max(best, score)
       alpha = Math.max(alpha, best)
@@ -78,7 +99,7 @@ export function findBestMove(position: Position, difficulty: SearchDifficulty = 
   const depth = DEPTH[difficulty]
   const scored = moves.map((move) => {
     const next = applyMove(position, move)
-    return { move, next, score: minimax(next, depth - 1, -Infinity, Infinity, position.turn) }
+    return { move, next, score: minimax(next, depth - 1, -Infinity, Infinity, position.turn, difficulty === 'club' || difficulty === 'master') }
   })
 
   if (difficulty === 'rookie') return pickRookie(scored)
