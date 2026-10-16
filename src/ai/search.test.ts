@@ -74,6 +74,19 @@ describe('findBestMove', () => {
     expect(getGameStatus(applyMove(position, move))).toEqual({ type: 'checkmate', winner: 'white' })
   })
 
+  it.each(['casual', 'club', 'master'] as const)('prefers checkmate over the fifty-move draw at %s level', (difficulty) => {
+    const position = {
+      ...positionWith({
+        f6: { color: 'white', type: 'king' },
+        g6: { color: 'white', type: 'queen' },
+        h8: { color: 'black', type: 'king' },
+      }, 'white'),
+      halfmoveClock: 99,
+    }
+    const move = findBestMove(position, difficulty, 0)!
+    expect(getGameStatus(applyMove(position, move))).toEqual({ type: 'checkmate', winner: 'white' })
+  })
+
   it('never finishes the game at rookie level while quiet moves remain', () => {
     const position = positionWith({
       a1: { color: 'white', type: 'king' },

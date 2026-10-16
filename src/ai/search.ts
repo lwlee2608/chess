@@ -104,9 +104,11 @@ function minimax(
 
   const { perspective } = search
   if (depth <= 0 && !search.extendTactics) return leafScore(position, depth, perspective)
-  if (getDrawStatus(position)) return 0
-
   const inCheck = isKingInCheck(position, position.turn)
+  if (getDrawStatus(position)) {
+    return inCheck && getAllLegalMoves(position).length === 0 ? mateScore(position, depth, perspective) : 0
+  }
+
   const quiescent = depth <= 0 && !inCheck
   const maximizing = position.turn === perspective
   let best = maximizing ? -Infinity : Infinity
