@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createStartingPosition } from '../engine/board'
 import type { CastlingRights, Piece, Position } from '../engine/types'
 import { squareToIndex } from '../engine/types'
 import { applyMove, getGameStatus } from '../engine/game'
@@ -32,17 +31,21 @@ describe('findBestMove', () => {
     })
   })
 
-  it('keeps both best opening moves without treating pruning bounds as ties', () => {
+  it.each(['club', 'master'] as const)('chooses only among exactly tied best moves at %s level', (difficulty) => {
+    const position = positionWith({
+      e4: { color: 'white', type: 'king' },
+      c6: { color: 'white', type: 'knight' },
+      e5: { color: 'black', type: 'queen' },
+      h8: { color: 'black', type: 'king' },
+    }, 'white')
     const random = vi.spyOn(Math, 'random')
     try {
-      random.mockReturnValue(0)
-      expect(findBestMove(createStartingPosition(), 'master', 0)).toEqual({
-        from: squareToIndex('b1'), to: squareToIndex('c3'),
+      const picks = [0, 0.999999].map((value) => {
+        random.mockReturnValue(value)
+        return findBestMove(position, difficulty, 0)!
       })
-      random.mockReturnValue(0.999999)
-      expect(findBestMove(createStartingPosition(), 'master', 0)).toEqual({
-        from: squareToIndex('g1'), to: squareToIndex('f3'),
-      })
+      expect(picks.every((move) => move.to === squareToIndex('e5'))).toBe(true)
+      expect(new Set(picks.map((move) => move.from))).toEqual(new Set([squareToIndex('e4'), squareToIndex('c6')]))
     } finally {
       random.mockRestore()
     }
