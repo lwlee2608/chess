@@ -26,7 +26,7 @@ describe('findBestMove', () => {
       h8: { color: 'black', type: 'king' },
       d8: { color: 'black', type: 'rook' },
     }, 'black')
-    expect(findBestMove(position, difficulty)).toMatchObject({
+    expect(findBestMove(position, difficulty, 0)).toMatchObject({
       from: squareToIndex('d8'),
       to: squareToIndex('d4'),
     })
@@ -36,11 +36,11 @@ describe('findBestMove', () => {
     const random = vi.spyOn(Math, 'random')
     try {
       random.mockReturnValue(0)
-      expect(findBestMove(createStartingPosition(), 'master')).toEqual({
+      expect(findBestMove(createStartingPosition(), 'master', 0)).toEqual({
         from: squareToIndex('b1'), to: squareToIndex('c3'),
       })
       random.mockReturnValue(0.999999)
-      expect(findBestMove(createStartingPosition(), 'master')).toEqual({
+      expect(findBestMove(createStartingPosition(), 'master', 0)).toEqual({
         from: squareToIndex('g1'), to: squareToIndex('f3'),
       })
     } finally {
@@ -58,7 +58,7 @@ describe('findBestMove', () => {
       d8: { color: 'black', type: 'queen' },
       e5: { color: 'black', type: 'pawn' },
     }, 'white')
-    expect(findBestMove(position, 'master')).toMatchObject({
+    expect(findBestMove(position, 'master', 0)).toMatchObject({
       from: squareToIndex('d4'),
       to: squareToIndex('e5'),
     })
@@ -70,7 +70,7 @@ describe('findBestMove', () => {
       g6: { color: 'white', type: 'queen' },
       h8: { color: 'black', type: 'king' },
     }, 'white')
-    const move = findBestMove(position, 'master')!
+    const move = findBestMove(position, 'master', 0)!
     expect(getGameStatus(applyMove(position, move))).toEqual({ type: 'checkmate', winner: 'white' })
   })
 

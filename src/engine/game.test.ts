@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createStartingPosition } from './board'
-import { applyLegalMove, applyMove, castlingRookSquare, getAllLegalMoves, getGameStatus, getLegalMoves, hasInsufficientMaterial } from './game'
+import { applyMoveUnchecked, applyMove, castlingRookSquare, getAllLegalMoves, getGameStatus, getLegalMoves, hasInsufficientMaterial } from './game'
 import type { CastlingRights, Piece, Position, PromotionPiece } from './types'
 import { squareToIndex } from './types'
 
@@ -29,7 +29,7 @@ describe('complete chess rules', () => {
         const move = getAllLegalMoves(position).find((candidate) => (
           candidate.from === squareToIndex(from) && candidate.to === squareToIndex(to)
         ))!
-        const next = applyLegalMove(position, move)
+        const next = applyMoveUnchecked(position, move)
         expect(next).toEqual(applyMove(position, move))
         position = next
       }
@@ -37,6 +37,13 @@ describe('complete chess rules', () => {
     expect(getGameStatus(position, getAllLegalMoves(position))).toEqual({
       type: 'draw', reason: 'threefold repetition',
     })
+  })
+
+  it('clears repetition history after an irreversible move', () => {
+    let position = play(createStartingPosition(), 'g1', 'f3')
+    expect(position.positionHistory).toHaveLength(1)
+    position = play(position, 'e7', 'e5')
+    expect(position.positionHistory).toEqual([])
   })
 
   it('detects Fool’s Mate', () => {
